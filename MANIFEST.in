@@ -1,0 +1,5 @@
+recursive-include pretix_jdavhe_orderlist/static *
+recursive-include pretix_jdavhe_orderlist/templates *
+recursive-include pretix_jdavhe_orderlist/locale *
+include LICENSE
+exclude .gitlab-ci.yml
