@@ -4,7 +4,13 @@ from decimal import Decimal
 import pytest
 from django.utils.timezone import now
 from django_scopes import scopes_disabled
-from pretix.base.models import Customer, InvoiceAddress, Order, OrderPayment
+from pretix.base.models import (
+    Customer,
+    InvoiceAddress,
+    Order,
+    OrderPayment,
+    Question,
+)
 
 URL = "/control/event/jdavhe/kurs/jdavhe-orderlist/"
 
@@ -136,3 +142,91 @@ def test_search_by_participant(admin_client, event, item):
 def test_navigation_entry(admin_client, event):
     html = admin_client.get("/control/event/jdavhe/kurs/orders/").content.decode()
     assert URL in html
+
+
+@pytest.mark.django_db
+def test_multiple_tickets_no_fallback_and_no_duplicates(
+    admin_client, organizer, event, item
+):
+    with scopes_disabled():
+        customer = Customer.objects.create(
+            organizer=organizer,
+            email="c@example.org",
+            name_parts={"full_name": "Kunde Konto"},
+        )
+        o = _order(event, "MULT1", customer=customer)
+        InvoiceAddress.objects.create(order=o, name_parts={"full_name": "Rech Nung"})
+        _position(o, item, "Anna Alpin")
+        _position(o, item, "")
+        _position(o, item, "Anna Alpin")
+        _position(o, item, "Bert Berg")
+    resp = admin_client.get(URL)
+    row = resp.context["orders"][0]
+    assert row.participant_names == ["Anna Alpin", "Bert Berg"]
+    assert row.name_source == "attendee"
+    html = resp.content.decode()
+    assert "Kunde Konto" not in html
+    assert "Rech Nung" not in html
+
+
+def _question(event, item, text, identifier, **kwargs):
+    q = event.questions.create(question=text, identifier=identifier, type="S", **kwargs)
+    q.items.add(item)
+    return q
+
+
+@pytest.mark.django_db
+def test_settings_page_and_question_columns(
+    admin_settings_client, event, item, addon_item
+):
+    with scopes_disabled():
+        sektion = _question(event, item, "Sektion", "sektion", position=2)
+        shoe = _question(event, addon_item, "Shoe size", "shoe", position=1)
+        hidden = _question(event, item, "Not selected", "other", position=3)
+        o = _order(event, "QUES1")
+        main = _position(o, item, "Anna Alpin")
+        second = _position(o, item, "Bert Berg")
+        addon = _position(o, addon_item, "", addon_to=main)
+        main.answers.create(question=sektion, answer="Frankfurt")
+        second.answers.create(question=sektion, answer="Frankfurt")
+        main.answers.create(question=hidden, answer="secret")
+        addon.answers.create(question=shoe, answer="42")
+
+    settings_url = URL + "settings/"
+    html = admin_settings_client.get(settings_url).content.decode()
+    assert "Sektion" in html and "Shoe size" in html
+
+    resp = admin_settings_client.post(
+        settings_url,
+        {"jdavhe_orderlist_question_columns": [str(sektion.pk), str(shoe.pk)]},
+    )
+    assert resp.status_code == 302
+
+    resp = admin_settings_client.get(URL)
+    # Columns follow the position of the questions, not the selection.
+    assert [q.pk for q in resp.context["questions"]] == [shoe.pk, sektion.pk]
+    row = resp.context["orders"][0]
+    assert row.question_values == [["42"], ["Frankfurt"]]
+    assert "secret" not in resp.content.decode()
+
+
+@pytest.mark.django_db
+def test_order_level_question(admin_settings_client, event, item):
+    with scopes_disabled():
+        q = event.questions.create(
+            question="Sektion",
+            identifier="sektion",
+            type="S",
+            container_type=Question.ContainerType.ORDER,
+        )
+        o = _order(event, "ORDQ1")
+        _position(o, item, "Anna Alpin")
+        o.answers.create(question=q, answer="Kassel")
+        event.settings.jdavhe_orderlist_question_columns = [str(q.pk)]
+    resp = admin_settings_client.get(URL)
+    assert resp.context["orders"][0].question_values == [["Kassel"]]
+
+
+@pytest.mark.django_db
+def test_settings_requires_permission(admin_client):
+    assert admin_client.get(URL + "settings/").status_code == 403

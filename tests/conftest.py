@@ -67,3 +67,15 @@ def unprivileged_client(client, organizer, event):
     user = _make_user(organizer, event, "nobody@example.org", {})
     client.login(email=user.email, password="dummy-password")
     return client
+
+
+@pytest.fixture
+def admin_settings_client(client, organizer, event):
+    user = _make_user(
+        organizer,
+        event,
+        "settings@example.org",
+        {"event.orders:read": True, "event.settings.general:write": True},
+    )
+    client.login(email=user.email, password="dummy-password")
+    return client

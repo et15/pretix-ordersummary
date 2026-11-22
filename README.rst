@@ -1,9 +1,34 @@
-JDAV Hessen order list
-==========================
+Participant order list
+======================
 
-This is a plugin for `pretix`_. 
+This is a plugin for `pretix`_ by JDAV Hessen.
 
-Order list showing participant names instead of the invoice recipient
+It adds a page **Orders → Participant orders** to the event backend. Unlike
+pretix' own order list, which shows the invoice recipient, it shows the
+participants of each order.
+
+Columns
+-------
+
+- **Order code**, linked to the order.
+- **Participant**: the participant names of all tickets of the order, without
+  duplicates and without add-on products. Only if no ticket has a name, the
+  name of the linked customer account is used, and after that the name (or
+  company) of the invoice address. An icon marks these fallbacks.
+- **Order date**.
+- **Payment method**: the methods of all paid payments, or, if nothing is paid
+  yet, the method of the newest open payment.
+- **Extra question columns**, chosen under *Settings → Participant orders*.
+  Each cell shows the answers of all tickets of the order (add-ons included),
+  without duplicates. Questions asked once per order are supported, too.
+- **Status**, as in pretix' order list.
+
+Canceled tickets are only used if all tickets of an order are canceled. The
+search box finds orders by order code, email, participant, customer account or
+invoice name.
+
+Permissions: viewing the list needs the permission to view orders; the settings
+page needs the permission to change the general event settings.
 
 Development setup
 -----------------

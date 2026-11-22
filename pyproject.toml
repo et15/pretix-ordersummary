@@ -7,10 +7,12 @@ requires-python = ">=3.11"
 license = {text = "Apache"}
 keywords = ["pretix"]
 authors = [
-    {name = "JDAV Hessen", email = "37038563+et15@users.noreply.github.com"},
+    {name = "et15", email = "37038563+et15@users.noreply.github.com"},
+    {name = "JDAV Hessen"},
 ]
 maintainers = [
-    {name = "JDAV Hessen", email = "37038563+et15@users.noreply.github.com"},
+    {name = "et15", email = "37038563+et15@users.noreply.github.com"},
+    {name = "JDAV Hessen"},
 ]
 
 dependencies = [

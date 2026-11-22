@@ -2,10 +2,11 @@ from django.urls import re_path
 
 from . import views
 
+_PREFIX = r"^control/event/(?P<organizer>[^/]+)/(?P<event>[^/]+)/jdavhe-orderlist/"
+
 urlpatterns = [
+    re_path(_PREFIX + r"$", views.OrderListView.as_view(), name="index"),
     re_path(
-        r"^control/event/(?P<organizer>[^/]+)/(?P<event>[^/]+)/jdavhe-orderlist/$",
-        views.OrderListView.as_view(),
-        name="index",
+        _PREFIX + r"settings/$", views.OrderListSettingsView.as_view(), name="settings"
     ),
 ]

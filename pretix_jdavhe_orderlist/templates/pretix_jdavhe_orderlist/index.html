@@ -25,6 +25,9 @@
                     <th>{% trans "Participant" %}</th>
                     <th>{% trans "Order date" %}</th>
                     <th>{% trans "Payment method" %}</th>
+                    {% for q in questions %}
+                        <th>{{ q.question }}</th>
+                    {% endfor %}
                     <th class="text-right flip">{% trans "Status" %}</th>
                 </tr>
                 </thead>
@@ -59,6 +62,9 @@
                         <td>
                             {% for m in o.payment_methods %}{{ m }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}
                         </td>
+                        {% for values in o.question_values %}
+                            <td>{% for v in values %}{{ v }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}</td>
+                        {% endfor %}
                         <td class="text-right flip">{% include "pretixcontrol/orders/fragment_order_status.html" with order=o %}</td>
                     </tr>
                 {% endfor %}
