@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-22 22:48+0000\n"
+"POT-Creation-Date: 2026-11-22 22:59+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: JDAV Hessen\n"
 "Language-Team: \n"
@@ -36,6 +36,18 @@ msgstr ""
 msgid ""
 "The answers to these questions are shown as additional columns in the "
 "participant order list, in the order of the questions."
+msgstr ""
+
+#: templates/pretix_jdavhe_orderlist/fragment_sort.html
+msgid "Sort descending"
+msgstr ""
+
+#: templates/pretix_jdavhe_orderlist/fragment_sort.html
+msgid "Sort ascending"
+msgstr ""
+
+#: templates/pretix_jdavhe_orderlist/index.html
+msgid "Order status"
 msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/index.html
@@ -88,4 +100,28 @@ msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/settings.html
 msgid "Save"
+msgstr ""
+
+#: views.py
+msgid "All except canceled"
+msgstr ""
+
+#: views.py
+msgid "All orders"
+msgstr ""
+
+#: views.py
+msgid "Pending"
+msgstr ""
+
+#: views.py
+msgid "Paid"
+msgstr ""
+
+#: views.py
+msgid "Expired"
+msgstr ""
+
+#: views.py
+msgid "Canceled (fully or with paid fee)"
 msgstr ""

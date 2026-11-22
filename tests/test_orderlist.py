@@ -99,7 +99,7 @@ def test_canceled_order_keeps_names(admin_client, event, item):
     with scopes_disabled():
         o = _order(event, "CANC1", status=Order.STATUS_CANCELED)
         _position(o, item, "Clara Cancel", canceled=True)
-    html = admin_client.get(URL).content.decode()
+    html = admin_client.get(URL, {"status": "c"}).content.decode()
     assert "Clara Cancel" in html
 
 
@@ -107,6 +107,7 @@ def test_canceled_order_keeps_names(admin_client, event, item):
 def test_payment_method(admin_client, event, item):
     with scopes_disabled():
         paid = _order(event, "PAID1", status=Order.STATUS_PAID)
+        _position(paid, item, "Paula Paid")
         paid.payments.create(
             provider="banktransfer",
             amount=paid.total,
@@ -118,6 +119,7 @@ def test_payment_method(admin_client, event, item):
             state=OrderPayment.PAYMENT_STATE_CONFIRMED,
         )
         pending = _order(event, "PEND1")
+        _position(pending, item, "Pia Pending")
         pending.payments.create(
             provider="banktransfer",
             amount=pending.total,
@@ -230,3 +232,68 @@ def test_order_level_question(admin_settings_client, event, item):
 @pytest.mark.django_db
 def test_settings_requires_permission(admin_client):
     assert admin_client.get(URL + "settings/").status_code == 403
+
+
+def _codes(resp):
+    return [o.code for o in resp.context["orders"]]
+
+
+@pytest.mark.django_db
+def test_status_filter(admin_client, event, item):
+    with scopes_disabled():
+        _position(_order(event, "PEND1"), item, "A")
+        _position(_order(event, "PAID1", status=Order.STATUS_PAID), item, "B")
+        _position(_order(event, "EXPI1", status=Order.STATUS_EXPIRED), item, "C")
+        _position(_order(event, "CANC1", status=Order.STATUS_CANCELED), item, "D")
+        # Canceled with paid fee: status stays "paid", all positions canceled.
+        fee = _order(event, "FEEC1", status=Order.STATUS_PAID)
+        _position(fee, item, "E", canceled=True)
+
+    def codes(status):
+        return sorted(_codes(admin_client.get(URL, {"status": status})))
+
+    assert codes("") == ["EXPI1", "PAID1", "PEND1"]
+    assert codes("all") == ["CANC1", "EXPI1", "FEEC1", "PAID1", "PEND1"]
+    assert codes("n") == ["PEND1"]
+    assert codes("p") == ["PAID1"]
+    assert codes("e") == ["EXPI1"]
+    assert codes("c") == ["CANC1", "FEEC1"]
+    assert codes("nonsense") == ["EXPI1", "PAID1", "PEND1"]
+
+
+@pytest.mark.django_db
+def test_sorting(admin_settings_client, organizer, event, item):
+    client = admin_settings_client
+    with scopes_disabled():
+        q = _question(event, item, "Sektion", "sektion")
+        event.settings.jdavhe_orderlist_question_columns = [str(q.pk)]
+        o1 = _order(event, "AAAA1", datetime=now() - timedelta(days=3))
+        p1 = _position(o1, item, "bert Berg")
+        p1.answers.create(question=q, answer="Kassel")
+        o2 = _order(event, "BBBB2", datetime=now() - timedelta(days=1))
+        _position(o2, item, "")
+        InvoiceAddress.objects.create(
+            order=o2, name_parts={"full_name": "Carla Invoice"}
+        )
+        o3 = _order(event, "CCCC3", datetime=now() - timedelta(days=2))
+        p3 = _position(o3, item, "Anna Alpin")
+        p3.answers.create(question=q, answer="Frankfurt")
+        o4 = _order(event, "DDDD4", datetime=now())
+        _position(o4, item, "")
+
+    def codes(ordering):
+        return _codes(client.get(URL, {"ordering": ordering}))
+
+    assert codes("") == ["DDDD4", "BBBB2", "CCCC3", "AAAA1"]  # default: newest first
+    assert codes("code") == ["AAAA1", "BBBB2", "CCCC3", "DDDD4"]
+    assert codes("-code") == ["DDDD4", "CCCC3", "BBBB2", "AAAA1"]
+    assert codes("datetime") == ["AAAA1", "CCCC3", "BBBB2", "DDDD4"]
+    # Case-insensitive, fallback names included, orders without a name last.
+    assert codes("participant") == ["CCCC3", "AAAA1", "BBBB2", "DDDD4"]
+    assert codes("-participant") == ["BBBB2", "AAAA1", "CCCC3", "DDDD4"]
+    # Orders without an answer come last (in order of creation).
+    assert codes(f"q{q.pk}") == ["CCCC3", "AAAA1", "BBBB2", "DDDD4"]
+    assert codes("payment") == codes("")  # not sortable: default order
+    html = client.get(URL).content.decode()
+    assert f"ordering=-q{q.pk}" in html
+    assert "ordering=-participant" in html

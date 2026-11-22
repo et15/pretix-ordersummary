@@ -17,7 +17,7 @@ class PluginApp(PluginConfig):
 
     class PretixPluginMeta:
         name = gettext_lazy("Participant order list")
-        author = "et15, JDAV Hessen"
+        author = "JDAV Hessen / et15"
         description = gettext_lazy(
             "Order list showing participant names instead of the invoice recipient"
         )

@@ -27,6 +27,14 @@ Canceled tickets are only used if all tickets of an order are canceled. The
 search box finds orders by order code, email, participant, customer account or
 invoice name.
 
+The status filter hides canceled orders by default, including orders canceled
+with a paid fee. "Paid" does not include those.
+
+All columns except the payment method can be sorted with the arrows next to the
+column header. Participant and question columns sort by the first value shown,
+ignoring case; orders without a value come last. Answers are sorted as text,
+so numbers sort like "10" before "9".
+
 Permissions: viewing the list needs the permission to view orders; the settings
 page needs the permission to change the general event settings.
 

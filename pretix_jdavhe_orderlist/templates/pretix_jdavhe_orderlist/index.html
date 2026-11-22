@@ -4,6 +4,16 @@
 {% block content %}
     <h1>{% trans "Participant orders" %}</h1>
     <form class="form-inline helper-display-inline" action="" method="get">
+        {% if request.GET.ordering %}
+            <input type="hidden" name="ordering" value="{{ request.GET.ordering }}">
+        {% endif %}
+        <div class="form-group">
+            <select name="status" class="form-control" aria-label="{% trans "Order status" %}">
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}"{% if value == status %} selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
         <div class="input-group">
             <input type="search" name="query" value="{{ query }}" class="form-control"
                    placeholder="{% trans "Order code, name or email" %}"
@@ -21,14 +31,24 @@
             <table class="table table-condensed table-hover table-orders">
                 <thead>
                 <tr>
-                    <th>{% trans "Order code" %}</th>
-                    <th>{% trans "Participant" %}</th>
-                    <th>{% trans "Order date" %}</th>
+                    <th>{% trans "Order code" %}
+                        {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="code" %}
+                    </th>
+                    <th>{% trans "Participant" %}
+                        {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="participant" %}
+                    </th>
+                    <th>{% trans "Order date" %}
+                        {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="datetime" %}
+                    </th>
                     <th>{% trans "Payment method" %}</th>
                     {% for q in questions %}
-                        <th>{{ q.question }}</th>
+                        <th>{{ q.question }}
+                            {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key=q.sort_key %}
+                        </th>
                     {% endfor %}
-                    <th class="text-right flip">{% trans "Status" %}</th>
+                    <th class="text-right flip">{% trans "Status" %}
+                        {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="status" %}
+                    </th>
                 </tr>
                 </thead>
                 <tbody>

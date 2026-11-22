@@ -1,8 +1,20 @@
 """Order list for the event backend that shows participant names per order."""
 
-from django.db.models import Exists, OuterRef, Prefetch, Q, prefetch_related_objects
+from django.db.models import (
+    Exists,
+    F,
+    OuterRef,
+    Prefetch,
+    Q,
+    Subquery,
+    Value,
+    prefetch_related_objects,
+)
+from django.db.models.functions import Coalesce, Lower, NullIf
 from django.http import Http404
 from django.urls import reverse
+from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import ListView
 from pretix.base.models import (
     Order,
@@ -124,6 +136,85 @@ def selected_questions(event):
     return list(event.questions.filter(pk__in=ids).order_by("position", "pk"))
 
 
+#: Status filter: value -> label. The empty value is the default.
+STATUS_ALL = "all"
+STATUS_CHOICES = (
+    ("", _("All except canceled")),
+    (STATUS_ALL, _("All orders")),
+    (Order.STATUS_PENDING, _("Pending")),
+    (Order.STATUS_PAID, _("Paid")),
+    (Order.STATUS_EXPIRED, _("Expired")),
+    (Order.STATUS_CANCELED, _("Canceled (fully or with paid fee)")),
+)
+
+
+def filter_status(qs, status):
+    """Filter orders by the status filter value (see ``STATUS_CHOICES``).
+
+    "Canceled" includes orders canceled with a paid fee. pretix keeps those in
+    status "paid", but without any non-canceled position.
+    """
+    has_active = Exists(OrderPosition.objects.filter(order=OuterRef("pk")))
+    canceled = Q(status=Order.STATUS_CANCELED) | (
+        Q(status=Order.STATUS_PAID) & ~has_active
+    )
+    if status == STATUS_ALL:
+        return qs
+    if status == Order.STATUS_CANCELED:
+        return qs.filter(canceled)
+    if status == Order.STATUS_PAID:
+        return qs.filter(Q(status=Order.STATUS_PAID) & has_active)
+    if status in (Order.STATUS_PENDING, Order.STATUS_EXPIRED):
+        return qs.filter(status=status)
+    return qs.exclude(canceled)
+
+
+def participant_sort_expression():
+    """Database expression for the first name shown in the participant column.
+
+    Mirrors ``participant_names``: participant name of the first main position
+    (canceled positions only if no main position is active), then the customer
+    account, then the invoice address.
+    """
+    order_has_active_main = Exists(
+        OrderPosition.objects.filter(order=OuterRef("order"), addon_to__isnull=True)
+    )
+    first_name = (
+        OrderPosition.all.filter(order=OuterRef("pk"), addon_to__isnull=True)
+        .exclude(attendee_name_cached__isnull=True)
+        .exclude(attendee_name_cached="")
+        .filter(Q(canceled=False) | ~order_has_active_main)
+        .order_by("positionid")
+        .values("attendee_name_cached")[:1]
+    )
+    return Coalesce(
+        Subquery(first_name),
+        NullIf("customer__name_cached", Value("")),
+        NullIf("invoice_address__name_cached", Value("")),
+        NullIf("invoice_address__company", Value("")),
+    )
+
+
+def answer_sort_expression(question):
+    """Database expression for the first answer to ``question`` of an order.
+
+    Sorts by the stored answer text, so numbers sort as text ("10" before "9").
+    """
+    order_answer = QuestionAnswer.objects.filter(
+        order=OuterRef("pk"), orderposition__isnull=True, question=question
+    ).values("answer")[:1]
+    position_answer = (
+        QuestionAnswer.objects.filter(
+            orderposition__order=OuterRef("pk"),
+            orderposition__canceled=False,
+            question=question,
+        )
+        .order_by("orderposition__positionid")
+        .values("answer")[:1]
+    )
+    return Coalesce(Subquery(order_answer), Subquery(position_answer))
+
+
 class PluginActiveMixin:
     """Return 404 if the plugin is not active for the event.
 
@@ -146,12 +237,50 @@ class OrderListView(
     template_name = "pretix_jdavhe_orderlist/index.html"
     permission = PERMISSION
 
-    def get_queryset(self):
-        qs = (
-            Order.objects.filter(event=self.request.event)
-            .select_related("invoice_address", "customer")
-            .order_by("-datetime", "-pk")
+    #: Sort keys of the fixed columns; question columns use ``q<question id>``.
+    SORT_FIELDS = ("code", "participant", "datetime", "status")
+    DEFAULT_ORDERING = "-datetime"
+
+    @cached_property
+    def questions(self):
+        questions = selected_questions(self.request.event)
+        for q in questions:
+            q.sort_key = f"q{q.pk}"
+        return questions
+
+    @cached_property
+    def ordering(self):
+        """The requested sort key (with optional "-"), or the default."""
+        value = self.request.GET.get("ordering", "")
+        key = value.removeprefix("-")
+        allowed = set(self.SORT_FIELDS) | {q.sort_key for q in self.questions}
+        return value if key in allowed else self.DEFAULT_ORDERING
+
+    def _apply_ordering(self, qs):
+        descending = self.ordering.startswith("-")
+        key = self.ordering.removeprefix("-")
+        if key == "participant":
+            qs = qs.annotate(_sort=Lower(participant_sort_expression()))
+            expr = "_sort"
+        elif key.startswith("q"):
+            question = next(q for q in self.questions if q.sort_key == key)
+            qs = qs.annotate(_sort=Lower(answer_sort_expression(question)))
+            expr = "_sort"
+        else:
+            expr = key
+        field = (
+            F(expr).desc(nulls_last=True)
+            if descending
+            else F(expr).asc(nulls_last=True)
         )
+        tie = "-pk" if descending else "pk"
+        return qs.order_by(field, tie)
+
+    def get_queryset(self):
+        qs = Order.objects.filter(event=self.request.event).select_related(
+            "invoice_address", "customer"
+        )
+        qs = filter_status(qs, self.request.GET.get("status", ""))
         query = self.request.GET.get("query", "").strip()
         if query:
             matching_position = OrderPosition.all.filter(
@@ -166,12 +295,12 @@ class OrderListView(
                 | Q(customer__name_cached__icontains=query)
                 | Exists(matching_position)
             )
-        return qs
+        return self._apply_ordering(qs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         orders = list(ctx["orders"])
-        questions = selected_questions(self.request.event)
+        questions = self.questions
         answer_qs = QuestionAnswer.objects.filter(
             question__in=questions
         ).select_related("question")
@@ -207,6 +336,9 @@ class OrderListView(
         ctx["orders"] = orders
         ctx["questions"] = questions
         ctx["query"] = self.request.GET.get("query", "")
+        ctx["status"] = self.request.GET.get("status", "")
+        ctx["status_choices"] = STATUS_CHOICES
+        ctx["filtered"] = bool(ctx["query"] or ctx["status"])
         return ctx
 
 

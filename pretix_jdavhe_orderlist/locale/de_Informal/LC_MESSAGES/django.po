@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-22 22:48+0000\n"
+"POT-Creation-Date: 2026-11-22 22:59+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: et15 <37038563+et15@users.noreply.github.com>\n"
 "Language-Team: \n"
@@ -24,7 +24,7 @@ msgstr ""
 
 #: apps.py
 msgid "Orders"
-msgstr "Bestellungen"
+msgstr ""
 
 #: apps.py signals.py templates/pretix_jdavhe_orderlist/index.html
 #: templates/pretix_jdavhe_orderlist/settings.html
@@ -43,17 +43,30 @@ msgstr ""
 "Die Antworten auf diese Fragen werden in der Bestellliste nach Teilnehmenden"
 " als zusätzliche Spalten angezeigt, in der Reihenfolge der Fragen."
 
+#: templates/pretix_jdavhe_orderlist/fragment_sort.html
+msgid "Sort descending"
+msgstr "Absteigend sortieren"
+
+#: templates/pretix_jdavhe_orderlist/fragment_sort.html
+msgid "Sort ascending"
+msgstr "Aufsteigend sortieren"
+
+#: templates/pretix_jdavhe_orderlist/index.html
+#| msgid "Order date"
+msgid "Order status"
+msgstr ""
+
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Order code, name or email"
 msgstr "Bestellnummer, Name oder E-Mail"
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Search"
-msgstr "Suche"
+msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Order code"
-msgstr "Bestellnummer"
+msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Participant"
@@ -61,19 +74,19 @@ msgstr "Teilnehmer*in"
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Order date"
-msgstr "Bestelldatum"
+msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Payment method"
-msgstr "Zahlungsmethode"
+msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Status"
-msgstr "Status"
+msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "TEST MODE"
-msgstr "TESTMODUS"
+msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "Name from customer account"
@@ -85,7 +98,7 @@ msgstr "Name aus der Rechnungsadresse"
 
 #: templates/pretix_jdavhe_orderlist/index.html
 msgid "No orders found."
-msgstr "Keine Bestellungen gefunden."
+msgstr ""
 
 #: templates/pretix_jdavhe_orderlist/settings.html
 msgid "This event has no questions yet."
@@ -93,4 +106,29 @@ msgstr "Diese Veranstaltung hat noch keine Fragen."
 
 #: templates/pretix_jdavhe_orderlist/settings.html
 msgid "Save"
-msgstr "Speichern"
+msgstr ""
+
+#: views.py
+msgid "All except canceled"
+msgstr "Alle außer stornierten"
+
+#: views.py
+#| msgid "Orders"
+msgid "All orders"
+msgstr ""
+
+#: views.py
+msgid "Pending"
+msgstr ""
+
+#: views.py
+msgid "Paid"
+msgstr ""
+
+#: views.py
+msgid "Expired"
+msgstr ""
+
+#: views.py
+msgid "Canceled (fully or with paid fee)"
+msgstr ""
