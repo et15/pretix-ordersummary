@@ -1,0 +1,72 @@
+{% extends "pretixcontrol/event/base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Participant orders" %}{% endblock %}
+{% block content %}
+    <h1>{% trans "Participant orders" %}</h1>
+    <form class="form-inline helper-display-inline" action="" method="get">
+        <div class="input-group">
+            <input type="search" name="query" value="{{ query }}" class="form-control"
+                   placeholder="{% trans "Order code, name or email" %}"
+                   aria-label="{% trans "Order code, name or email" %}">
+            <span class="input-group-btn">
+                <button class="btn btn-primary" type="submit">
+                    <span class="fa fa-search" aria-hidden="true"></span>
+                    {% trans "Search" %}
+                </button>
+            </span>
+        </div>
+    </form>
+    {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-condensed table-hover table-orders">
+                <thead>
+                <tr>
+                    <th>{% trans "Order code" %}</th>
+                    <th>{% trans "Participant" %}</th>
+                    <th>{% trans "Order date" %}</th>
+                    <th>{% trans "Payment method" %}</th>
+                    <th class="text-right flip">{% trans "Status" %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for o in orders %}
+                    <tr>
+                        <td>
+                            <strong>
+                                <a href="{% url "control:event.order" event=request.event.slug organizer=request.event.organizer.slug code=o.code %}">{{ o.code }}</a>
+                            </strong>
+                            {% if o.testmode %}
+                                <span class="label label-warning">{% trans "TEST MODE" %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if o.participant_names %}
+                                {% for name in o.participant_names %}{{ name }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                                {% if o.name_source == "customer" %}
+                                    <span class="fa fa-user text-muted" data-toggle="tooltip"
+                                          title="{% trans "Name from customer account" %}"></span>
+                                    <span class="sr-only">({% trans "Name from customer account" %})</span>
+                                {% elif o.name_source == "invoice" %}
+                                    <span class="fa fa-file-text-o text-muted" data-toggle="tooltip"
+                                          title="{% trans "Name from invoice address" %}"></span>
+                                    <span class="sr-only">({% trans "Name from invoice address" %})</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">&ndash;</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ o.datetime|date:"SHORT_DATETIME_FORMAT" }}</td>
+                        <td>
+                            {% for m in o.payment_methods %}{{ m }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}
+                        </td>
+                        <td class="text-right flip">{% include "pretixcontrol/orders/fragment_order_status.html" with order=o %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% include "pretixcontrol/pagination.html" %}
+    {% else %}
+        <p class="text-muted">{% trans "No orders found." %}</p>
+    {% endif %}
+{% endblock %}
