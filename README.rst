@@ -7,6 +7,13 @@ It adds a page **Orders → Orders by attendee** to the event backend. Unlike
 pretix' own order list, which shows the email address and the invoice name, it
 shows the attendees of each order.
 
+.. image:: https://raw.githubusercontent.com/et15/pretix-ordersummary/main/docs/screenshot.png
+   :alt: The page "Orders by attendee" with columns for order code, attendee, order
+         date, payment method, a question, age, check-in and status
+   :width: 100%
+
+The screenshot shows fictional demo data.
+
 Columns
 -------
 
