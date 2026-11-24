@@ -19,8 +19,12 @@ QUESTION_COLUMNS_KEY = "ordersummary_question_columns"
 CHECKIN_COLUMN_KEY = "ordersummary_checkin_column"
 CHECKIN_ANY = "any"
 
+#: ID of the date question with the date of birth for the age column, "" = hidden.
+AGE_QUESTION_KEY = "ordersummary_age_question"
+
 settings_hierarkey.add_default(
     STANDARD_COLUMNS_KEY, json.dumps(STANDARD_COLUMNS_DEFAULT), list
 )
 settings_hierarkey.add_default(QUESTION_COLUMNS_KEY, "[]", list)
 settings_hierarkey.add_default(CHECKIN_COLUMN_KEY, "", str)
+settings_hierarkey.add_default(AGE_QUESTION_KEY, "", str)

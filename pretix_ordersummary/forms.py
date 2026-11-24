@@ -1,8 +1,10 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from pretix.base.forms import SettingsForm
+from pretix.base.models import Question
 
 from .settings import (
+    AGE_QUESTION_KEY,
     CHECKIN_ANY,
     CHECKIN_COLUMN_KEY,
     COLUMN_DATETIME,
@@ -52,6 +54,24 @@ class OrderListSettingsForm(SettingsForm):
                 *[
                     (str(cl.pk), str(cl.name))
                     for cl in self.obj.checkin_lists.order_by("name", "pk")
+                ],
+            ],
+        )
+        self.fields[AGE_QUESTION_KEY] = forms.ChoiceField(
+            label=_("Age"),
+            help_text=_(
+                "Choose the question for the date of birth (a question of type "
+                "date). The column shows the age on the first day of the event; "
+                "in an event series, on the date the ticket is for."
+            ),
+            required=False,
+            choices=[
+                ("", _("Do not show column")),
+                *[
+                    (str(q.pk), str(q.question))
+                    for q in self.obj.questions.filter(
+                        type=Question.TYPE_DATE
+                    ).order_by("position", "pk")
                 ],
             ],
         )

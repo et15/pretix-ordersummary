@@ -21,6 +21,10 @@ Columns
   the method of the newest open payment.
 - **Question columns** (optional): each cell shows the answers of all tickets of the order (add-ons included),
   without duplicates. Questions asked once per order are supported, too.
+- **Age** (optional, based on a date question for the date of birth): the age
+  on the first day of the event, or in an event series on the date of the
+  ticket, in the event's time zone. One age per attendee (add-ons ignored);
+  equal ages are not merged. Sorting by age sorts by date of birth.
 - **Check-in** (optional, for one check-in list or all lists): whether the attendees have ever entered. Exits, failed scans and
   add-on products are not taken into account. With one attendee the cell shows
   a check mark, with several attendees "entered / total", e.g. "1 / 2".

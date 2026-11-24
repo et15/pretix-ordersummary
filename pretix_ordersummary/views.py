@@ -1,5 +1,8 @@
 """Order list for the event backend that shows attendee names per order."""
 
+from zoneinfo import ZoneInfo
+
+import dateutil.parser
 from django.db.models import (
     Count,
     Exists,
@@ -22,6 +25,7 @@ from pretix.base.models import (
     Order,
     OrderPayment,
     OrderPosition,
+    Question,
     QuestionAnswer,
 )
 from pretix.control.permissions import EventPermissionRequiredMixin
@@ -30,6 +34,7 @@ from pretix.control.views.event import EventSettingsFormView, EventSettingsViewM
 
 from .forms import OrderListSettingsForm
 from .settings import (
+    AGE_QUESTION_KEY,
     CHECKIN_ANY,
     CHECKIN_COLUMN_KEY,
     COLUMN_DATETIME,
@@ -143,6 +148,58 @@ def selected_questions(event):
     """
     ids = event.settings.get(QUESTION_COLUMNS_KEY, as_type=list) or []
     return list(event.questions.filter(pk__in=ids).order_by("position", "pk"))
+
+
+def selected_age_question(event):
+    """Return the date question configured for the age column, or ``None``.
+
+    A question that was deleted or is no longer of type date hides the column.
+    """
+    value = event.settings.get(AGE_QUESTION_KEY, as_type=str) or ""
+    if not value.isdigit():
+        return None
+    return event.questions.filter(pk=value, type=Question.TYPE_DATE).first()
+
+
+def age_on(birth_date, day):
+    """Return the age in full years on ``day`` of someone born on ``birth_date``."""
+    had_birthday = (day.month, day.day) >= (birth_date.month, birth_date.day)
+    return day.year - birth_date.year - (0 if had_birthday else 1)
+
+
+def _parse_date(answer):
+    try:
+        return dateutil.parser.parse(answer.answer).date()
+    except (ValueError, OverflowError):
+        return None
+
+
+def ages(order, question, event):
+    """Return the ages for the age column of an order, one per attendee.
+
+    The age is calculated for the first day of the event, or, in an event series,
+    of the date of the ticket. Expects the same prefetched data as
+    ``question_values``. Uses main positions only (canceled ones only if all are
+    canceled) and the answer to a question asked once per order. Unlike other
+    columns, equal ages are not merged: each one stands for an attendee.
+    """
+    tz = ZoneInfo(event.settings.timezone)
+
+    def first_day(subevent):
+        return (subevent or event).date_from.astimezone(tz).date()
+
+    result = []
+    for a in order.order_answer_list:
+        birth_date = a.question_id == question.pk and _parse_date(a)
+        if birth_date:
+            result.append(age_on(birth_date, first_day(None)))
+    active = [p for p in order.main_positions if not p.canceled]
+    for p in active or order.main_positions:
+        for a in p.answer_list:
+            birth_date = a.question_id == question.pk and _parse_date(a)
+            if birth_date:
+                result.append(age_on(birth_date, first_day(p.subevent)))
+    return result
 
 
 def selected_checkin_list(event):
@@ -305,6 +362,7 @@ class OrderListView(
     #: Sort keys of the fixed columns; question columns use ``q<question id>``.
     SORT_FIELDS = ("code", "attendee", "datetime", "status")
     CHECKIN_SORT_KEY = "checkin"
+    AGE_SORT_KEY = "age"
     DEFAULT_ORDERING = "-datetime"
 
     def get_template_names(self):
@@ -328,6 +386,10 @@ class OrderListView(
         )
 
     @cached_property
+    def age_question(self):
+        return selected_age_question(self.request.event)
+
+    @cached_property
     def checkin_list(self):
         return selected_checkin_list(self.request.event)
 
@@ -339,6 +401,8 @@ class OrderListView(
         allowed = set(self.SORT_FIELDS) | {q.sort_key for q in self.questions}
         if self.checkin_list:
             allowed.add(self.CHECKIN_SORT_KEY)
+        if self.age_question:
+            allowed.add(self.AGE_SORT_KEY)
         return value if key in allowed else self.DEFAULT_ORDERING
 
     def _apply_ordering(self, qs):
@@ -347,6 +411,12 @@ class OrderListView(
         if key == "attendee":
             qs = qs.annotate(_sort=Lower(attendee_sort_expression()))
             expr = "_sort"
+        elif key == self.AGE_SORT_KEY:
+            # Sorted by date of birth (stored as ISO date), so a higher age is an
+            # earlier date: the direction is inverted.
+            qs = qs.annotate(_sort=answer_sort_expression(self.age_question))
+            expr = "_sort"
+            descending = not descending
         elif key == self.CHECKIN_SORT_KEY:
             qs = qs.annotate(_sort=checkin_sort_expression(self.checkin_list))
             expr = "_sort"
@@ -389,10 +459,15 @@ class OrderListView(
         ctx = super().get_context_data(**kwargs)
         orders = list(ctx["orders"])
         questions = self.questions
+        answer_questions = list(questions)
+        if self.age_question:
+            answer_questions.append(self.age_question)
         answer_qs = QuestionAnswer.objects.filter(
-            question__in=questions
+            question__in=answer_questions
         ).select_related("question")
-        positions_qs = OrderPosition.all.order_by("positionid")
+        positions_qs = OrderPosition.all.select_related("subevent").order_by(
+            "positionid"
+        )
         if self.checkin_list:
             positions_qs = positions_qs.annotate(
                 entered=Exists(entries(self.checkin_list))
@@ -438,11 +513,14 @@ class OrderListView(
             o.question_values = question_values(o, questions)
             if self.checkin_list:
                 o.checkins_entered, o.checkins_total = checkin_counts(o)
+            if self.age_question:
+                o.ages = ages(o, self.age_question, self.request.event)
         ctx["orders"] = orders
         ctx["questions"] = questions
         ctx["show_datetime"] = COLUMN_DATETIME in self.standard_columns
         ctx["show_payment"] = show_payment
         ctx["checkin_list"] = self.checkin_list
+        ctx["age_question"] = self.age_question
         ctx["checkin_list_any"] = self.checkin_list == CHECKIN_ANY
         ctx["query"] = self.request.GET.get("query", "")
         ctx["status"] = self.request.GET.get("status", "")

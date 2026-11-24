@@ -23,6 +23,11 @@
                         {% include "pretix_ordersummary/fragment_sort.html" with key=q.sort_key %}
                     </th>
                 {% endfor %}
+                {% if age_question %}
+                    <th>{% trans "Age" %}
+                        {% include "pretix_ordersummary/fragment_sort.html" with key="age" %}
+                    </th>
+                {% endif %}
                 {% if checkin_list %}
                     <th>{% trans "Check-in" %}
                         {% include "pretix_ordersummary/fragment_sort.html" with key="checkin" %}
@@ -72,6 +77,9 @@
                     {% for values in o.question_values %}
                         <td>{% for v in values %}{{ v }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}</td>
                     {% endfor %}
+                    {% if age_question %}
+                        <td>{% for age in o.ages %}{{ age }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}</td>
+                    {% endif %}
                     {% if checkin_list %}
                         <td>
                             {% if o.checkins_total == 0 %}

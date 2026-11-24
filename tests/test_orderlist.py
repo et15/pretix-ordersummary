@@ -432,3 +432,124 @@ def test_optional_standard_columns(admin_settings_client, event, item):
     assert not hasattr(resp.context["orders"][0], "payment_methods")
     # Newest first stays the default order, also without the date column.
     assert client.get(URL, {"ordering": "datetime"}).status_code == 200
+
+
+def test_age_on():
+    from datetime import date
+
+    from pretix_ordersummary.views import age_on
+
+    assert age_on(date(2015, 7, 10), date(2027, 7, 10)) == 12
+    assert age_on(date(2015, 7, 11), date(2027, 7, 10)) == 11
+    assert age_on(date(2015, 12, 31), date(2027, 1, 1)) == 11
+    # Born on 29 February: one year older from 1 March in non-leap years.
+    assert age_on(date(2012, 2, 29), date(2027, 2, 28)) == 14
+    assert age_on(date(2012, 2, 29), date(2027, 3, 1)) == 15
+
+
+@pytest.mark.django_db
+def test_age_column(admin_settings_client, event, item, addon_item):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    client = admin_settings_client
+    with scopes_disabled():
+        event.settings.timezone = "Europe/Berlin"
+        # 00:30 in Berlin on 10 July is still 9 July in UTC: the event's
+        # time zone decides which day is the first day.
+        event.date_from = datetime(2027, 7, 10, 0, 30, tzinfo=ZoneInfo("Europe/Berlin"))
+        event.save()
+        dob = event.questions.create(
+            question="Date of birth", identifier="dob", type="D"
+        )
+        dob.items.add(item)
+        text_q = _question(event, item, "Sektion", "sektion")
+
+        o1 = _order(event, "AGE01")
+        a = _position(o1, item, "Anna")
+        a.answers.create(question=dob, answer="2015-07-10")
+        b = _position(o1, item, "Ben")
+        b.answers.create(question=dob, answer="2015-07-10")
+        addon = _position(o1, addon_item, "", addon_to=a)
+        addon.answers.create(question=dob, answer="1990-01-01")
+        o2 = _order(event, "AGE02")
+        c = _position(o2, item, "Carla")
+        c.answers.create(question=dob, answer="2015-07-11")
+        _position(_order(event, "AGE03"), item, "No answer")
+
+    settings_html = client.get(URL + "settings/").content.decode()
+    assert f'<option value="{dob.pk}"' in settings_html
+    assert f'<option value="{text_q.pk}"' not in settings_html  # only date questions
+
+    resp = client.post(
+        URL + "settings/",
+        {
+            "ordersummary_standard_columns": ["datetime"],
+            "ordersummary_age_question": dob.pk,
+        },
+    )
+    assert resp.status_code == 302
+    resp = client.get(URL)
+    ages = {o.code: o.ages for o in resp.context["orders"]}
+    # Equal ages are not merged; add-ons are ignored.
+    assert ages == {"AGE01": [12, 12], "AGE02": [11], "AGE03": []}
+    assert "ordering=-age" in resp.content.decode()
+
+    def codes(ordering):
+        return [
+            o.code for o in client.get(URL, {"ordering": ordering}).context["orders"]
+        ]
+
+    assert codes("age") == ["AGE02", "AGE01", "AGE03"]
+    assert codes("-age") == ["AGE01", "AGE02", "AGE03"]
+
+
+@pytest.mark.django_db
+def test_age_column_event_series_and_order_question(admin_settings_client, event, item):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    berlin = ZoneInfo("Europe/Berlin")
+    with scopes_disabled():
+        event.settings.timezone = "Europe/Berlin"
+        event.has_subevents = True
+        event.date_from = datetime(2027, 1, 1, 10, 0, tzinfo=berlin)
+        event.save()
+        summer = event.subevents.create(
+            name="Summer", date_from=datetime(2027, 7, 10, 10, 0, tzinfo=berlin)
+        )
+        dob = event.questions.create(
+            question="Date of birth", identifier="dob", type="D"
+        )
+        o = _order(event, "SER01")
+        p = _position(o, item, "Anna", subevent=summer)
+        p.answers.create(question=dob, answer="2015-07-10")
+        order_dob = event.questions.create(
+            question="Contact person born",
+            identifier="cdob",
+            type="D",
+            container_type=Question.ContainerType.ORDER,
+        )
+        o2 = _order(event, "ORD02")
+        _position(o2, item, "Ben")
+        o2.answers.create(question=order_dob, answer="2000-06-01")
+        event.settings.ordersummary_age_question = str(dob.pk)
+    rows = {o.code: o.ages for o in admin_settings_client.get(URL).context["orders"]}
+    # Age on the date of the ticket (10 July 2027), not on the series start.
+    assert rows["SER01"] == [12]
+
+    with scopes_disabled():
+        event.settings.ordersummary_age_question = str(order_dob.pk)
+    rows = {o.code: o.ages for o in admin_settings_client.get(URL).context["orders"]}
+    assert rows["ORD02"] == [26]
+
+
+@pytest.mark.django_db
+def test_age_column_hidden_for_non_date_question(admin_settings_client, event, item):
+    with scopes_disabled():
+        q = _question(event, item, "Sektion", "sektion")
+        event.settings.ordersummary_age_question = str(q.pk)
+        _position(_order(event, "ORD01"), item, "Anna")
+    resp = admin_settings_client.get(URL, {"ordering": "age"})
+    assert resp.context["age_question"] is None
+    assert not hasattr(resp.context["orders"][0], "ages")

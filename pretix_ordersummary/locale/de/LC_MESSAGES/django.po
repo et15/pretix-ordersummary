@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 03:41+0000\n"
+"POT-Creation-Date: 2026-11-24 03:43+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: et15 <37038563+et15@users.noreply.github.com>\n"
 "Language-Team: \n"
@@ -79,6 +79,21 @@ msgstr "Spalte nicht anzeigen"
 #: pretix_ordersummary/forms.py
 msgid "All check-in lists"
 msgstr ""
+
+#: pretix_ordersummary/forms.py
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Age"
+msgstr "Alter"
+
+#: pretix_ordersummary/forms.py
+msgid ""
+"Choose the question for the date of birth (a question of type date). The "
+"column shows the age on the first day of the event; in an event series, on "
+"the date the ticket is for."
+msgstr ""
+"Wählen Sie die Frage nach dem Geburtsdatum (eine Frage vom Typ Datum). Die "
+"Spalte zeigt das Alter am ersten Tag der Veranstaltung, bei einer "
+"Veranstaltungsreihe am Termin des Tickets."
 
 #: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
 msgid "Order code"
