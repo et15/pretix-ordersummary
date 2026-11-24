@@ -83,6 +83,14 @@ cut with `Commitizen`_ (``cz bump``), which updates the version in
 ``CHANGELOG.md`` and creates the matching git tag. The version starts at
 0.1.0; while it is 0.x, breaking changes bump the minor version.
 
+Pushing the tag (``git push --follow-tags``) runs
+``.github/workflows/publish.yml``: it builds the package, uploads it to PyPI
+with Trusted Publishing and creates a GitHub release from the matching
+``CHANGELOG.md`` section. Before the first release, register this repository
+as a (pending) trusted publisher on PyPI with workflow ``publish.yml`` and
+environment ``pypi``, and create the environment ``pypi`` in the GitHub
+repository settings.
+
 
 Quick start without a pretix checkout
 -------------------------------------
