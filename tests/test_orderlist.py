@@ -297,3 +297,24 @@ def test_sorting(admin_settings_client, organizer, event, item):
     html = client.get(URL).content.decode()
     assert f"ordering=-q{q.pk}" in html
     assert "ordering=-participant" in html
+
+
+@pytest.mark.django_db
+def test_live_filter_returns_only_results(admin_client, event, item):
+    with scopes_disabled():
+        _position(_order(event, "LIVE1"), item, "Lena Live")
+        _position(_order(event, "LIVE2", status=Order.STATUS_CANCELED), item, "Carl")
+    page = admin_client.get(URL).content.decode()
+    assert 'id="jdavhe-orderlist-filter"' in page
+    assert "pretix_jdavhe_orderlist/orderlist.js" in page
+
+    resp = admin_client.get(
+        URL, {"status": "c"}, headers={"X-Requested-With": "XMLHttpRequest"}
+    )
+    html = resp.content.decode()
+    assert "<html" not in html
+    assert 'id="jdavhe-orderlist-filter"' not in html
+    assert "LIVE2" in html
+    assert "LIVE1" not in html
+    # Sort links keep the current filter.
+    assert "status=c" in html

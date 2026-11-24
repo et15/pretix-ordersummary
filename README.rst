@@ -30,6 +30,10 @@ invoice name.
 The status filter hides canceled orders by default, including orders canceled
 with a paid fee. "Paid" does not include those.
 
+The status filter applies as soon as it changes and the search while typing,
+without reloading the page (``static/pretix_jdavhe_orderlist/orderlist.js``).
+Without JavaScript, both work as a normal form.
+
 All columns except the payment method can be sorted with the arrows next to the
 column header. Participant and question columns sort by the first value shown,
 ignoring case; orders without a value come last. Answers are sorted as text,

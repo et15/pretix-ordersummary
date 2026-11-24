@@ -241,6 +241,12 @@ class OrderListView(
     SORT_FIELDS = ("code", "participant", "datetime", "status")
     DEFAULT_ORDERING = "-datetime"
 
+    def get_template_names(self):
+        # The live filter (static/.../orderlist.js) only needs the result table.
+        if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return ["pretix_jdavhe_orderlist/fragment_results.html"]
+        return [self.template_name]
+
     @cached_property
     def questions(self):
         questions = selected_questions(self.request.event)
