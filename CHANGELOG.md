@@ -1,3 +1,11 @@
+## v0.1.1 (2026-11-24)
+
+### Feat
+
+- add optional age column
+- make order date and payment method optional columns
+- add optional check-in column
+
 ## v0.1.0 (2026-11-24)
 
 ### Feat
