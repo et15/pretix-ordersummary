@@ -5,7 +5,6 @@ description = "Order list showing the attendees of each order, with payment meth
 readme = "README.rst"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-license-files = ["LICENSE"]
 keywords = ["pretix"]
 authors = [
     {name = "et15", email = "37038563+et15@users.noreply.github.com"},
@@ -55,7 +54,7 @@ test = [
     "pytest",
     "pytest-django",
     "coverage",
-    "pretix @ git+https://github.com/pretix/pretix.git@master",
+    "pretix",
 ]
 
 [tool.ruff]
