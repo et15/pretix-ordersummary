@@ -5,22 +5,22 @@
             <thead>
             <tr>
                 <th>{% trans "Order code" %}
-                    {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="code" %}
+                    {% include "pretix_ordersummary/fragment_sort.html" with key="code" %}
                 </th>
-                <th>{% trans "Participant" %}
-                    {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="participant" %}
+                <th>{% trans "Attendee" %}
+                    {% include "pretix_ordersummary/fragment_sort.html" with key="attendee" %}
                 </th>
                 <th>{% trans "Order date" %}
-                    {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="datetime" %}
+                    {% include "pretix_ordersummary/fragment_sort.html" with key="datetime" %}
                 </th>
                 <th>{% trans "Payment method" %}</th>
                 {% for q in questions %}
                     <th>{{ q.question }}
-                        {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key=q.sort_key %}
+                        {% include "pretix_ordersummary/fragment_sort.html" with key=q.sort_key %}
                     </th>
                 {% endfor %}
                 <th class="text-right flip">{% trans "Status" %}
-                    {% include "pretix_jdavhe_orderlist/fragment_sort.html" with key="status" %}
+                    {% include "pretix_ordersummary/fragment_sort.html" with key="status" %}
                 </th>
             </tr>
             </thead>
@@ -36,8 +36,8 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if o.participant_names %}
-                            {% for name in o.participant_names %}{{ name }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+                        {% if o.attendee_names %}
+                            {% for name in o.attendee_names %}{{ name }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
                             {% if o.name_source == "customer" %}
                                 <span class="fa fa-user text-muted" data-toggle="tooltip"
                                       title="{% trans "Name from customer account" %}"></span>

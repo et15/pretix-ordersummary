@@ -1,18 +1,17 @@
 [project]
-name = "pretix-jdavhe-orderlist"
+name = "pretix-ordersummary"
 dynamic = ["version"]
-description = "Order list showing participant names instead of the invoice recipient"
+description = "Order list showing the attendees of each order, with payment method and selected question answers"
 readme = "README.rst"
 requires-python = ">=3.11"
-license = {text = "Apache"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 keywords = ["pretix"]
 authors = [
     {name = "et15", email = "37038563+et15@users.noreply.github.com"},
-    {name = "JDAV Hessen"},
 ]
 maintainers = [
     {name = "et15", email = "37038563+et15@users.noreply.github.com"},
-    {name = "JDAV Hessen"},
 ]
 
 dependencies = [
@@ -25,26 +24,26 @@ dependencies = [
 # PretixPluginMeta. So this must be the plain top-level package name; pointing
 # it at ".apps" makes Django load a different, PretixPluginMeta-less app and
 # the plugin silently never shows up in the plugin list.
-pretix_jdavhe_orderlist = "pretix_jdavhe_orderlist:PretixPluginMeta"
+pretix_ordersummary = "pretix_ordersummary:PretixPluginMeta"
 
 [project.entry-points."distutils.commands"]
 build = "pretix_plugin_build.build:CustomBuild"
 
 [build-system]
 requires = [
-    "setuptools",
+    "setuptools>=77",
     "pretix-plugin-build",
 ]
 
 [project.urls]
-homepage = "https://github.com/jdavhessen/pretix-jdavhe-orderlist"
-repository = "https://github.com/jdavhessen/pretix-jdavhe-orderlist"
+homepage = "https://github.com/et15/pretix-ordersummary"
+repository = "https://github.com/et15/pretix-ordersummary"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.dynamic]
-version = {attr = "pretix_jdavhe_orderlist.__version__"}
+version = {attr = "pretix_ordersummary.__version__"}
 
 [tool.setuptools.packages.find]
 include = ["pretix*"]
@@ -87,7 +86,7 @@ ignore = [
 "tests/*" = ["DTZ"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["pretix_jdavhe_orderlist"]
+known-first-party = ["pretix_ordersummary"]
 known-third-party = ["pretix"]
 
 [tool.ruff.format]
@@ -106,4 +105,4 @@ annotated_tag = true
 # `cz bump --increment MAJOR` and remove this line.
 major_version_zero = true
 update_changelog_on_bump = true
-version_files = ["pretix_jdavhe_orderlist/__init__.py:__version__"]
+version_files = ["pretix_ordersummary/__init__.py:__version__"]

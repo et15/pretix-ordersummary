@@ -1,13 +1,13 @@
 {% extends "pretixcontrol/event/settings_base.html" %}
 {% load i18n %}
 {% load bootstrap3 %}
-{% block title %}{% trans "Participant orders" %}{% endblock %}
+{% block title %}{% trans "Orders by attendee" %}{% endblock %}
 {% block inside %}
     <form action="" method="post" class="form-horizontal">
         {% csrf_token %}
         <fieldset>
-            <legend>{% trans "Participant orders" %}</legend>
-            {% if form.fields.jdavhe_orderlist_question_columns.choices %}
+            <legend>{% trans "Orders by attendee" %}</legend>
+            {% if form.fields.ordersummary_question_columns.choices %}
                 {% bootstrap_form form layout="horizontal" %}
             {% else %}
                 <p class="text-muted">{% trans "This event has no questions yet." %}</p>

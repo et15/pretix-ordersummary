@@ -1,8 +1,8 @@
 from pretix.base.plugins import PLUGIN_LEVEL_EVENT, get_all_plugins
 
-from pretix_jdavhe_orderlist import __version__
+from pretix_ordersummary import __version__
 
-MODULE = "pretix_jdavhe_orderlist"
+MODULE = "pretix_ordersummary"
 
 
 def test_plugin_is_registered():

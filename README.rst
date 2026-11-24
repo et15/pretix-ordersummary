@@ -1,30 +1,31 @@
-Participant order list
-======================
+Attendee order list
+===================
 
-This is a plugin for `pretix`_ by JDAV Hessen.
+This is a plugin for `pretix`_.
 
-It adds a page **Orders → Participant orders** to the event backend. Unlike
-pretix' own order list, which shows the invoice recipient, it shows the
-participants of each order.
+It adds a page **Orders → Orders by attendee** to the event backend. Unlike
+pretix' own order list, which shows the email address and the invoice name, it
+shows the attendees of each order.
 
 Columns
 -------
 
 - **Order code**, linked to the order.
-- **Participant**: the participant names of all tickets of the order, without
+- **Attendee**: the attendee names of all tickets of the order, without
   duplicates and without add-on products. Only if no ticket has a name, the
   name of the linked customer account is used, and after that the name (or
   company) of the invoice address. An icon marks these fallbacks.
 - **Order date**.
-- **Payment method**: the methods of all paid payments, or, if nothing is paid
-  yet, the method of the newest open payment.
-- **Extra question columns**, chosen under *Settings → Participant orders*.
+- **Payment method**: the methods of all paid payments (including payments
+  refunded later), or, if nothing is paid yet, the method of the newest open
+  payment.
+- **Extra question columns**, chosen under *Settings → Orders by attendee*.
   Each cell shows the answers of all tickets of the order (add-ons included),
   without duplicates. Questions asked once per order are supported, too.
 - **Status**, as in pretix' order list.
 
 Canceled tickets are only used if all tickets of an order are canceled. The
-search box finds orders by order code, email, participant, customer account or
+search box finds orders by order code, email, attendee, customer account or
 invoice name.
 
 The status filter hides canceled orders by default, including orders canceled
@@ -32,12 +33,12 @@ with a paid fee. "Paid" does not include those.
 
 The status filter applies as soon as it changes and the search while typing.
 Filter, search, sort arrows and page navigation update only the table, without
-reloading the page (``static/pretix_jdavhe_orderlist/orderlist.js``). Sorting
+reloading the page (``static/pretix_ordersummary/orderlist.js``). Sorting
 and page changes create browser history entries, so "back" works. Without
 JavaScript, everything works as normal links and forms.
 
 All columns except the payment method can be sorted with the arrows next to the
-column header. Participant and question columns sort by the first value shown,
+column header. Attendee and question columns sort by the first value shown,
 ignoring case; orders without a value come last. Answers are sorted as text,
 so numbers sort like "10" before "9".
 
@@ -79,7 +80,7 @@ To automatically check for these issues before you commit, you can run ``.instal
 
 Commits in this repository follow `Conventional Commits`_ and releases are
 cut with `Commitizen`_ (``cz bump``), which updates the version in
-``pyproject.toml`` and ``pretix_jdavhe_orderlist/__init__.py``, writes
+``pyproject.toml`` and ``pretix_ordersummary/__init__.py``, writes
 ``CHANGELOG.md`` and creates the matching git tag. The version starts at
 0.1.0; while it is 0.x, breaking changes bump the minor version.
 
@@ -114,7 +115,7 @@ License
 -------
 
 
-Copyright 2026 JDAV Hessen
+Copyright 2026 et15
 
 Released under the terms of the Apache License 2.0
 

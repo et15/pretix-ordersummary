@@ -12,7 +12,7 @@ def organizer():
     with scopes_disabled():
         # Bank transfer is a hybrid plugin: it must be active for the organizer too.
         return Organizer.objects.create(
-            name="JDAV Hessen", slug="jdavhe", plugins="pretix.plugins.banktransfer"
+            name="Demo Organizer", slug="demo", plugins="pretix.plugins.banktransfer"
         )
 
 
@@ -24,7 +24,7 @@ def event(organizer):
             name="Kletterkurs",
             slug="kurs",
             date_from=now() + timedelta(days=30),
-            plugins="pretix_jdavhe_orderlist,pretix.plugins.banktransfer",
+            plugins="pretix_ordersummary,pretix.plugins.banktransfer",
         )
         ev.settings.payment_banktransfer__enabled = True
         return ev

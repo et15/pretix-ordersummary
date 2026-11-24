@@ -12,7 +12,7 @@ from pretix.base.models import (
     Question,
 )
 
-URL = "/control/event/jdavhe/kurs/jdavhe-orderlist/"
+URL = "/control/event/demo/kurs/ordersummary/"
 
 
 def _order(event, code, **kwargs):
@@ -51,9 +51,7 @@ def test_404_if_plugin_inactive(admin_client, event):
 
 
 @pytest.mark.django_db
-def test_participant_names_instead_of_invoice_name(
-    admin_client, event, item, addon_item
-):
+def test_attendee_names_instead_of_invoice_name(admin_client, event, item, addon_item):
     with scopes_disabled():
         o = _order(event, "ABC12")
         InvoiceAddress.objects.create(order=o, name_parts={"full_name": "Paula Payer"})
@@ -132,7 +130,7 @@ def test_payment_method(admin_client, event, item):
 
 
 @pytest.mark.django_db
-def test_search_by_participant(admin_client, event, item):
+def test_search_by_attendee(admin_client, event, item):
     with scopes_disabled():
         _position(_order(event, "FIND1"), item, "Findable Person")
         _position(_order(event, "HIDE1"), item, "Other Person")
@@ -142,7 +140,7 @@ def test_search_by_participant(admin_client, event, item):
 
 @pytest.mark.django_db
 def test_navigation_entry(admin_client, event):
-    html = admin_client.get("/control/event/jdavhe/kurs/orders/").content.decode()
+    html = admin_client.get("/control/event/demo/kurs/orders/").content.decode()
     assert URL in html
 
 
@@ -164,7 +162,7 @@ def test_multiple_tickets_no_fallback_and_no_duplicates(
         _position(o, item, "Bert Berg")
     resp = admin_client.get(URL)
     row = resp.context["orders"][0]
-    assert row.participant_names == ["Anna Alpin", "Bert Berg"]
+    assert row.attendee_names == ["Anna Alpin", "Bert Berg"]
     assert row.name_source == "attendee"
     html = resp.content.decode()
     assert "Kunde Konto" not in html
@@ -200,7 +198,7 @@ def test_settings_page_and_question_columns(
 
     resp = admin_settings_client.post(
         settings_url,
-        {"jdavhe_orderlist_question_columns": [str(sektion.pk), str(shoe.pk)]},
+        {"ordersummary_question_columns": [str(sektion.pk), str(shoe.pk)]},
     )
     assert resp.status_code == 302
 
@@ -224,7 +222,7 @@ def test_order_level_question(admin_settings_client, event, item):
         o = _order(event, "ORDQ1")
         _position(o, item, "Anna Alpin")
         o.answers.create(question=q, answer="Kassel")
-        event.settings.jdavhe_orderlist_question_columns = [str(q.pk)]
+        event.settings.ordersummary_question_columns = [str(q.pk)]
     resp = admin_settings_client.get(URL)
     assert resp.context["orders"][0].question_values == [["Kassel"]]
 
@@ -266,7 +264,7 @@ def test_sorting(admin_settings_client, organizer, event, item):
     client = admin_settings_client
     with scopes_disabled():
         q = _question(event, item, "Sektion", "sektion")
-        event.settings.jdavhe_orderlist_question_columns = [str(q.pk)]
+        event.settings.ordersummary_question_columns = [str(q.pk)]
         o1 = _order(event, "AAAA1", datetime=now() - timedelta(days=3))
         p1 = _position(o1, item, "bert Berg")
         p1.answers.create(question=q, answer="Kassel")
@@ -289,14 +287,14 @@ def test_sorting(admin_settings_client, organizer, event, item):
     assert codes("-code") == ["DDDD4", "CCCC3", "BBBB2", "AAAA1"]
     assert codes("datetime") == ["AAAA1", "CCCC3", "BBBB2", "DDDD4"]
     # Case-insensitive, fallback names included, orders without a name last.
-    assert codes("participant") == ["CCCC3", "AAAA1", "BBBB2", "DDDD4"]
-    assert codes("-participant") == ["BBBB2", "AAAA1", "CCCC3", "DDDD4"]
+    assert codes("attendee") == ["CCCC3", "AAAA1", "BBBB2", "DDDD4"]
+    assert codes("-attendee") == ["BBBB2", "AAAA1", "CCCC3", "DDDD4"]
     # Orders without an answer come last (in order of creation).
     assert codes(f"q{q.pk}") == ["CCCC3", "AAAA1", "BBBB2", "DDDD4"]
     assert codes("payment") == codes("")  # not sortable: default order
     html = client.get(URL).content.decode()
     assert f"ordering=-q{q.pk}" in html
-    assert "ordering=-participant" in html
+    assert "ordering=-attendee" in html
 
 
 @pytest.mark.django_db
@@ -305,15 +303,15 @@ def test_live_filter_returns_only_results(admin_client, event, item):
         _position(_order(event, "LIVE1"), item, "Lena Live")
         _position(_order(event, "LIVE2", status=Order.STATUS_CANCELED), item, "Carl")
     page = admin_client.get(URL).content.decode()
-    assert 'id="jdavhe-orderlist-filter"' in page
-    assert "pretix_jdavhe_orderlist/orderlist.js" in page
+    assert 'id="ordersummary-filter"' in page
+    assert "pretix_ordersummary/orderlist.js" in page
 
     resp = admin_client.get(
         URL, {"status": "c"}, headers={"X-Requested-With": "XMLHttpRequest"}
     )
     html = resp.content.decode()
     assert "<html" not in html
-    assert 'id="jdavhe-orderlist-filter"' not in html
+    assert 'id="ordersummary-filter"' not in html
     assert "LIVE2" in html
     assert "LIVE1" not in html
     # Sort links keep the current filter.

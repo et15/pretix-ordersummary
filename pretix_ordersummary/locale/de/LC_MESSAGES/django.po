@@ -1,0 +1,135 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-24 02:49+0000\n"
+"PO-Revision-Date: \n"
+"Last-Translator: et15 <37038563+et15@users.noreply.github.com>\n"
+"Language-Team: \n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: pretix_ordersummary/apps.py
+msgid "Attendee order list"
+msgstr "Bestellliste nach Teilnehmenden"
+
+#: pretix_ordersummary/apps.py
+msgid ""
+"Order list showing the attendees of each order, with payment method and "
+"selected question answers"
+msgstr ""
+"Bestellliste mit den Teilnehmenden jeder Bestellung, der Zahlungsmethode und "
+"ausgewählten Antworten auf Fragen"
+
+#: pretix_ordersummary/apps.py
+msgid "Orders"
+msgstr ""
+
+#: pretix_ordersummary/apps.py pretix_ordersummary/signals.py
+#: pretix_ordersummary/templates/pretix_ordersummary/index.html
+#: pretix_ordersummary/templates/pretix_ordersummary/settings.html
+msgid "Orders by attendee"
+msgstr "Bestellungen nach Teilnehmenden"
+
+#: pretix_ordersummary/forms.py
+msgid "Questions as columns"
+msgstr "Fragen als Spalten"
+
+#: pretix_ordersummary/forms.py
+msgid ""
+"The answers to these questions are shown as additional columns in the "
+"attendee order list, in the order of the questions."
+msgstr ""
+"Die Antworten auf diese Fragen werden in der Bestellliste nach Teilnehmenden "
+"als zusätzliche Spalten angezeigt, in der Reihenfolge der Fragen."
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Order code"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Attendee"
+msgstr "Teilnehmer*in"
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Order date"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Payment method"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Status"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "TEST MODE"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Name from customer account"
+msgstr "Name aus dem Kundenkonto"
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Name from invoice address"
+msgstr "Name aus der Rechnungsadresse"
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "No orders found."
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_sort.html
+msgid "Sort descending"
+msgstr "Absteigend sortieren"
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_sort.html
+msgid "Sort ascending"
+msgstr "Aufsteigend sortieren"
+
+#: pretix_ordersummary/templates/pretix_ordersummary/index.html
+msgid "Order status"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/index.html
+msgid "Order code, name or email"
+msgstr "Bestellnummer, Name oder E-Mail"
+
+#: pretix_ordersummary/templates/pretix_ordersummary/index.html
+msgid "Search"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/settings.html
+msgid "This event has no questions yet."
+msgstr "Diese Veranstaltung hat noch keine Fragen."
+
+#: pretix_ordersummary/templates/pretix_ordersummary/settings.html
+msgid "Save"
+msgstr ""
+
+#: pretix_ordersummary/views.py
+msgid "All except canceled"
+msgstr "Alle außer stornierten"
+
+#: pretix_ordersummary/views.py
+msgid "All orders"
+msgstr ""
+
+#: pretix_ordersummary/views.py
+msgid "Pending"
+msgstr ""
+
+#: pretix_ordersummary/views.py
+msgid "Paid"
+msgstr ""
+
+#: pretix_ordersummary/views.py
+msgid "Expired"
+msgstr ""
+
+#: pretix_ordersummary/views.py
+msgid "Canceled (fully or with paid fee)"
+msgstr ""

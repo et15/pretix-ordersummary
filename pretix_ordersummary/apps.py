@@ -12,14 +12,15 @@ except ImportError:
 
 class PluginApp(PluginConfig):
     default = True
-    name = "pretix_jdavhe_orderlist"
-    verbose_name = "Participant order list"
+    name = "pretix_ordersummary"
+    verbose_name = "Attendee order list"
 
     class PretixPluginMeta:
-        name = gettext_lazy("Participant order list")
-        author = "JDAV Hessen / et15"
+        name = gettext_lazy("Attendee order list")
+        author = "et15"
         description = gettext_lazy(
-            "Order list showing participant names instead of the invoice recipient"
+            "Order list showing the attendees of each order, with payment method "
+            "and selected question answers"
         )
         visible = True
         version = __version__
@@ -28,15 +29,15 @@ class PluginApp(PluginConfig):
         level = PLUGIN_LEVEL_EVENT
         settings_links = [
             (
-                (gettext_lazy("Orders"), gettext_lazy("Participant orders")),
-                "plugins:pretix_jdavhe_orderlist:settings",
+                (gettext_lazy("Orders"), gettext_lazy("Orders by attendee")),
+                "plugins:pretix_ordersummary:settings",
                 {},
             ),
         ]
         navigation_links = [
             (
-                (gettext_lazy("Orders"), gettext_lazy("Participant orders")),
-                "plugins:pretix_jdavhe_orderlist:index",
+                (gettext_lazy("Orders"), gettext_lazy("Orders by attendee")),
+                "plugins:pretix_ordersummary:index",
                 {},
             ),
         ]

@@ -2,7 +2,7 @@ from django.urls import re_path
 
 from . import views
 
-_PREFIX = r"^control/event/(?P<organizer>[^/]+)/(?P<event>[^/]+)/jdavhe-orderlist/"
+_PREFIX = r"^control/event/(?P<organizer>[^/]+)/(?P<event>[^/]+)/ordersummary/"
 
 urlpatterns = [
     re_path(_PREFIX + r"$", views.OrderListView.as_view(), name="index"),

@@ -1,6 +1,6 @@
 #!/bin/sh
-COMPONENTS=pretix/pretix-plugin-pretix-jdavhe-orderlist
-DIR=pretix_jdavhe_orderlist/locale
+COMPONENTS=pretix/pretix-plugin-pretix-ordersummary
+DIR=pretix_ordersummary/locale
 # Renerates .po files used for translating the plugin
 set -e
 set -x

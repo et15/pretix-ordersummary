@@ -10,7 +10,7 @@ def _url_kwargs(request):
     return {"organizer": request.organizer.slug, "event": request.event.slug}
 
 
-@receiver(nav_event, dispatch_uid="jdavhe_orderlist_nav")
+@receiver(nav_event, dispatch_uid="ordersummary_nav")
 def navbar_entry(sender, request, **kwargs):
     """Add the order list as a sub-item of the built-in "Orders" menu."""
     if not request.user.has_event_permission(
@@ -20,18 +20,18 @@ def navbar_entry(sender, request, **kwargs):
     url = resolve(request.path_info)
     return [
         {
-            "label": _("Participant orders"),
+            "label": _("Orders by attendee"),
             "url": reverse(
-                "plugins:pretix_jdavhe_orderlist:index", kwargs=_url_kwargs(request)
+                "plugins:pretix_ordersummary:index", kwargs=_url_kwargs(request)
             ),
             "parent": reverse("control:event.orders", kwargs=_url_kwargs(request)),
-            "active": url.namespace == "plugins:pretix_jdavhe_orderlist"
+            "active": url.namespace == "plugins:pretix_ordersummary"
             and url.url_name == "index",
         }
     ]
 
 
-@receiver(nav_event_settings, dispatch_uid="jdavhe_orderlist_nav_settings")
+@receiver(nav_event_settings, dispatch_uid="ordersummary_nav_settings")
 def navbar_settings_entry(sender, request, **kwargs):
     """Add the settings page to the event settings menu."""
     if not request.user.has_event_permission(
@@ -41,11 +41,11 @@ def navbar_settings_entry(sender, request, **kwargs):
     url = resolve(request.path_info)
     return [
         {
-            "label": _("Participant orders"),
+            "label": _("Orders by attendee"),
             "url": reverse(
-                "plugins:pretix_jdavhe_orderlist:settings", kwargs=_url_kwargs(request)
+                "plugins:pretix_ordersummary:settings", kwargs=_url_kwargs(request)
             ),
-            "active": url.namespace == "plugins:pretix_jdavhe_orderlist"
+            "active": url.namespace == "plugins:pretix_ordersummary"
             and url.url_name == "settings",
         }
     ]

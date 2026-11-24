@@ -1,5 +1,5 @@
 /*
- * Live updates for the participant order list.
+ * Live updates for the attendee order list.
  *
  * Filter, search, sort arrows and pagination load only the result table
  * (see OrderListView.get_template_names) instead of the whole page.
@@ -8,8 +8,8 @@
 $(function () {
     'use strict'
 
-    const form = document.getElementById('jdavhe-orderlist-filter')
-    const results = document.getElementById('jdavhe-orderlist-results')
+    const form = document.getElementById('ordersummary-filter')
+    const results = document.getElementById('ordersummary-results')
     if (!form || !results || !window.fetch || !window.history.pushState) {
         return
     }

@@ -1,10 +1,10 @@
 {% extends "pretixcontrol/event/base.html" %}
 {% load i18n %}
 {% load static %}
-{% block title %}{% trans "Participant orders" %}{% endblock %}
+{% block title %}{% trans "Orders by attendee" %}{% endblock %}
 {% block content %}
-    <h1>{% trans "Participant orders" %}</h1>
-    <form id="jdavhe-orderlist-filter" class="form-inline helper-display-inline" action="" method="get">
+    <h1>{% trans "Orders by attendee" %}</h1>
+    <form id="ordersummary-filter" class="form-inline helper-display-inline" action="" method="get">
         {% if request.GET.ordering %}
             <input type="hidden" name="ordering" value="{{ request.GET.ordering }}">
         {% endif %}
@@ -27,8 +27,8 @@
             </span>
         </div>
     </form>
-    <div id="jdavhe-orderlist-results">
-        {% include "pretix_jdavhe_orderlist/fragment_results.html" %}
+    <div id="ordersummary-results">
+        {% include "pretix_ordersummary/fragment_results.html" %}
     </div>
-    <script src="{% static "pretix_jdavhe_orderlist/orderlist.js" %}"></script>
+    <script src="{% static "pretix_ordersummary/orderlist.js" %}"></script>
 {% endblock %}

@@ -1,5 +1,5 @@
 [plugin]
-package = "pretix-jdavhe-orderlist"
-modules = [ "pretix_jdavhe_orderlist" ]
-marketplace_name = "jdavhe-orderlist"
+package = "pretix-ordersummary"
+modules = [ "pretix_ordersummary" ]
+marketplace_name = "ordersummary"
 

@@ -1,4 +1,4 @@
-"""Order list for the event backend that shows participant names per order."""
+"""Order list for the event backend that shows attendee names per order."""
 
 from django.db.models import (
     Exists,
@@ -29,7 +29,7 @@ from pretix.control.views.event import EventSettingsFormView, EventSettingsViewM
 from .forms import OrderListSettingsForm
 from .settings import QUESTION_COLUMNS_KEY
 
-PLUGIN_MODULE = "pretix_jdavhe_orderlist"
+PLUGIN_MODULE = "pretix_ordersummary"
 PERMISSION = "event.orders:read"
 SETTINGS_PERMISSION = "event.settings.general:write"
 
@@ -58,14 +58,14 @@ def _unique(values):
     return seen
 
 
-def participant_names(order):
+def attendee_names(order):
     """Return ``(names, source)`` to show for an order.
 
     Expects ``order.main_positions`` (all positions without add-ons, prefetched).
     Order of preference:
 
-    1. Participant names of non-canceled positions; for an order whose positions
-       are all canceled, the participant names of the canceled positions.
+    1. Attendee names of non-canceled positions; for an order whose positions
+       are all canceled, the attendee names of the canceled positions.
        Add-on positions are ignored.
     2. Name of the linked customer account.
     3. Name (or, if empty, company) of the invoice address.
@@ -169,10 +169,10 @@ def filter_status(qs, status):
     return qs.exclude(canceled)
 
 
-def participant_sort_expression():
-    """Database expression for the first name shown in the participant column.
+def attendee_sort_expression():
+    """Database expression for the first name shown in the attendee column.
 
-    Mirrors ``participant_names``: participant name of the first main position
+    Mirrors ``attendee_names``: attendee name of the first main position
     (canceled positions only if no main position is active), then the customer
     account, then the invoice address.
     """
@@ -230,21 +230,21 @@ class PluginActiveMixin:
 class OrderListView(
     PluginActiveMixin, EventPermissionRequiredMixin, PaginationMixin, ListView
 ):
-    """List of the event's orders with participant name and payment method."""
+    """List of the event's orders with attendee name and payment method."""
 
     model = Order
     context_object_name = "orders"
-    template_name = "pretix_jdavhe_orderlist/index.html"
+    template_name = "pretix_ordersummary/index.html"
     permission = PERMISSION
 
     #: Sort keys of the fixed columns; question columns use ``q<question id>``.
-    SORT_FIELDS = ("code", "participant", "datetime", "status")
+    SORT_FIELDS = ("code", "attendee", "datetime", "status")
     DEFAULT_ORDERING = "-datetime"
 
     def get_template_names(self):
         # The live filter (static/.../orderlist.js) only needs the result table.
         if self.request.headers.get("X-Requested-With") == "XMLHttpRequest":
-            return ["pretix_jdavhe_orderlist/fragment_results.html"]
+            return ["pretix_ordersummary/fragment_results.html"]
         return [self.template_name]
 
     @cached_property
@@ -265,8 +265,8 @@ class OrderListView(
     def _apply_ordering(self, qs):
         descending = self.ordering.startswith("-")
         key = self.ordering.removeprefix("-")
-        if key == "participant":
-            qs = qs.annotate(_sort=Lower(participant_sort_expression()))
+        if key == "attendee":
+            qs = qs.annotate(_sort=Lower(attendee_sort_expression()))
             expr = "_sort"
         elif key.startswith("q"):
             question = next(q for q in self.questions if q.sort_key == key)
@@ -336,7 +336,7 @@ class OrderListView(
             o.main_positions = [p for p in o.position_list if p.addon_to_id is None]
             # Used by pretix' status label (``count_positions``).
             o.pcnt = sum(1 for p in o.position_list if not p.canceled)
-            o.participant_names, o.name_source = participant_names(o)
+            o.attendee_names, o.name_source = attendee_names(o)
             o.payment_methods = payment_provider_names(o, providers)
             o.question_values = question_values(o, questions)
         ctx["orders"] = orders
@@ -354,12 +354,12 @@ class OrderListSettingsView(
     """Event settings page to choose the questions shown as extra columns."""
 
     form_class = OrderListSettingsForm
-    template_name = "pretix_jdavhe_orderlist/settings.html"
+    template_name = "pretix_ordersummary/settings.html"
     permission = SETTINGS_PERMISSION
 
     def get_success_url(self):
         return reverse(
-            "plugins:pretix_jdavhe_orderlist:settings",
+            "plugins:pretix_ordersummary:settings",
             kwargs={
                 "organizer": self.request.organizer.slug,
                 "event": self.request.event.slug,

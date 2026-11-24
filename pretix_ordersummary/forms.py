@@ -14,7 +14,7 @@ class OrderListSettingsForm(SettingsForm):
             label=_("Questions as columns"),
             help_text=_(
                 "The answers to these questions are shown as additional columns "
-                "in the participant order list, in the order of the questions."
+                "in the attendee order list, in the order of the questions."
             ),
             required=False,
             widget=forms.CheckboxSelectMultiple,

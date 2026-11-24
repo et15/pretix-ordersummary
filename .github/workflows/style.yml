@@ -4,13 +4,13 @@ on:
   push:
     branches: [ main, master ]
     paths-ignore:
-      - 'pretix_jdavhe_orderlist/locale/**'
-      - 'pretix_jdavhe_orderlist/static/**'
+      - 'pretix_ordersummary/locale/**'
+      - 'pretix_ordersummary/static/**'
   pull_request:
     branches: [ main, master ]
     paths-ignore:
-      - 'pretix_jdavhe_orderlist/locale/**'
-      - 'pretix_jdavhe_orderlist/static/**'
+      - 'pretix_ordersummary/locale/**'
+      - 'pretix_ordersummary/static/**'
 
 jobs:
   ruff:
