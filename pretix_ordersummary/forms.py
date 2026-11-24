@@ -2,7 +2,14 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from pretix.base.forms import SettingsForm
 
-from .settings import CHECKIN_ANY, CHECKIN_COLUMN_KEY, QUESTION_COLUMNS_KEY
+from .settings import (
+    CHECKIN_ANY,
+    CHECKIN_COLUMN_KEY,
+    COLUMN_DATETIME,
+    COLUMN_PAYMENT,
+    QUESTION_COLUMNS_KEY,
+    STANDARD_COLUMNS_KEY,
+)
 
 
 class OrderListSettingsForm(SettingsForm):
@@ -10,6 +17,15 @@ class OrderListSettingsForm(SettingsForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields[STANDARD_COLUMNS_KEY] = forms.MultipleChoiceField(
+            label=_("Columns"),
+            required=False,
+            widget=forms.CheckboxSelectMultiple,
+            choices=[
+                (COLUMN_DATETIME, _("Order date")),
+                (COLUMN_PAYMENT, _("Payment method")),
+            ],
+        )
         self.fields[QUESTION_COLUMNS_KEY] = forms.MultipleChoiceField(
             label=_("Questions as columns"),
             help_text=_(

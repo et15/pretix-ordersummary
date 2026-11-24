@@ -15,18 +15,18 @@ Columns
   duplicates and without add-on products. Only if no ticket has a name, the
   name of the linked customer account is used, and after that the name (or
   company) of the invoice address. An icon marks these fallbacks.
-- **Order date**.
-- **Payment method**: the methods of all paid payments (including payments
-  refunded later), or, if nothing is paid yet, the method of the newest open
-  payment.
-- **Extra question columns**, chosen under *Settings → Orders by attendee*.
-  Each cell shows the answers of all tickets of the order (add-ons included),
+- **Order date** (optional, shown by default).
+- **Payment method** (optional, shown by default): the methods of all paid
+  payments (including payments refunded later), or, if nothing is paid yet,
+  the method of the newest open payment.
+- **Question columns** (optional): each cell shows the answers of all tickets of the order (add-ons included),
   without duplicates. Questions asked once per order are supported, too.
-- **Check-in** (optional, same settings page, for one check-in list or all
-  lists): whether the attendees have ever entered. Exits, failed scans and
+- **Check-in** (optional, for one check-in list or all lists): whether the attendees have ever entered. Exits, failed scans and
   add-on products are not taken into account. With one attendee the cell shows
   a check mark, with several attendees "entered / total", e.g. "1 / 2".
 - **Status**, as in pretix' order list.
+
+The optional columns are chosen under *Settings → Orders by attendee*.
 
 Canceled tickets are only used if all tickets of an order are canceled. The
 search box finds orders by order code, email, attendee, customer account or

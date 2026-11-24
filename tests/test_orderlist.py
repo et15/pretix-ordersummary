@@ -390,3 +390,45 @@ def test_settings_page_without_questions(admin_settings_client):
     html = admin_settings_client.get(URL + "settings/").content.decode()
     assert "This event has no questions yet." in html
     assert "ordersummary_checkin_column" in html
+
+
+@pytest.mark.django_db
+def test_optional_standard_columns(admin_settings_client, event, item):
+    client = admin_settings_client
+    with scopes_disabled():
+        o = _order(event, "STD01", status=Order.STATUS_PAID)
+        _position(o, item, "Anna")
+        o.payments.create(
+            provider="free", amount=o.total, state=OrderPayment.PAYMENT_STATE_CONFIRMED
+        )
+
+    # Shown by default.
+    resp = client.get(URL)
+    html = resp.content.decode()
+    assert resp.context["show_datetime"] and resp.context["show_payment"]
+    assert "Payment method" in html and "ordering=-datetime" in html
+    assert resp.context["orders"][0].payment_methods == ["Free of charge"]
+    settings_html = client.get(URL + "settings/").content.decode()
+    assert 'name="ordersummary_standard_columns" value="datetime"' in settings_html
+
+    def save(columns):
+        resp = client.post(
+            URL + "settings/", {"ordersummary_standard_columns": columns}
+        )
+        assert resp.status_code == 302
+        return client.get(URL)
+
+    resp = save(["payment"])
+    html = resp.content.decode()
+    assert not resp.context["show_datetime"] and resp.context["show_payment"]
+    assert "ordering=-datetime" not in html
+    assert "Free of charge" in html
+
+    resp = save([])
+    html = resp.content.decode()
+    assert not resp.context["show_datetime"] and not resp.context["show_payment"]
+    assert "Payment method" not in html
+    assert "Free of charge" not in html
+    assert not hasattr(resp.context["orders"][0], "payment_methods")
+    # Newest first stays the default order, also without the date column.
+    assert client.get(URL, {"ordering": "datetime"}).status_code == 200

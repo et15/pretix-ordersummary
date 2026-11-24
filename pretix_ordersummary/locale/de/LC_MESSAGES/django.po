@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 03:19+0000\n"
+"POT-Creation-Date: 2026-11-24 03:41+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: et15 <37038563+et15@users.noreply.github.com>\n"
 "Language-Team: \n"
@@ -33,6 +33,20 @@ msgstr ""
 #: pretix_ordersummary/templates/pretix_ordersummary/settings.html
 msgid "Orders by attendee"
 msgstr "Bestellungen nach Teilnehmenden"
+
+#: pretix_ordersummary/forms.py
+msgid "Columns"
+msgstr "Spalten"
+
+#: pretix_ordersummary/forms.py
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Order date"
+msgstr ""
+
+#: pretix_ordersummary/forms.py
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Payment method"
+msgstr ""
 
 #: pretix_ordersummary/forms.py
 msgid "Questions as columns"
@@ -73,14 +87,6 @@ msgstr ""
 #: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
 msgid "Attendee"
 msgstr "Teilnehmer*in"
-
-#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
-msgid "Order date"
-msgstr ""
-
-#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
-msgid "Payment method"
-msgstr ""
 
 #: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
 msgid "Check-in"

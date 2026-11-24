@@ -29,7 +29,14 @@ from pretix.control.views import PaginationMixin
 from pretix.control.views.event import EventSettingsFormView, EventSettingsViewMixin
 
 from .forms import OrderListSettingsForm
-from .settings import CHECKIN_ANY, CHECKIN_COLUMN_KEY, QUESTION_COLUMNS_KEY
+from .settings import (
+    CHECKIN_ANY,
+    CHECKIN_COLUMN_KEY,
+    COLUMN_DATETIME,
+    COLUMN_PAYMENT,
+    QUESTION_COLUMNS_KEY,
+    STANDARD_COLUMNS_KEY,
+)
 
 PLUGIN_MODULE = "pretix_ordersummary"
 PERMISSION = "event.orders:read"
@@ -314,6 +321,13 @@ class OrderListView(
         return questions
 
     @cached_property
+    def standard_columns(self):
+        """Keys of the optional standard columns that are shown."""
+        return set(
+            self.request.event.settings.get(STANDARD_COLUMNS_KEY, as_type=list) or []
+        )
+
+    @cached_property
     def checkin_list(self):
         return selected_checkin_list(self.request.event)
 
@@ -398,24 +412,36 @@ class OrderListView(
                 queryset=answer_qs.filter(orderposition__isnull=True),
                 to_attr="order_answer_list",
             ),
-            Prefetch(
-                "payments",
-                queryset=OrderPayment.objects.order_by("-created", "-pk"),
-                to_attr="payment_list",
-            ),
         )
-        providers = self.request.event.get_payment_providers(cached=True)
+        show_payment = COLUMN_PAYMENT in self.standard_columns
+        if show_payment:
+            prefetch_related_objects(
+                orders,
+                Prefetch(
+                    "payments",
+                    queryset=OrderPayment.objects.order_by("-created", "-pk"),
+                    to_attr="payment_list",
+                ),
+            )
+        providers = (
+            self.request.event.get_payment_providers(cached=True)
+            if show_payment
+            else {}
+        )
         for o in orders:
             o.main_positions = [p for p in o.position_list if p.addon_to_id is None]
             # Used by pretix' status label (``count_positions``).
             o.pcnt = sum(1 for p in o.position_list if not p.canceled)
             o.attendee_names, o.name_source = attendee_names(o)
-            o.payment_methods = payment_provider_names(o, providers)
+            if show_payment:
+                o.payment_methods = payment_provider_names(o, providers)
             o.question_values = question_values(o, questions)
             if self.checkin_list:
                 o.checkins_entered, o.checkins_total = checkin_counts(o)
         ctx["orders"] = orders
         ctx["questions"] = questions
+        ctx["show_datetime"] = COLUMN_DATETIME in self.standard_columns
+        ctx["show_payment"] = show_payment
         ctx["checkin_list"] = self.checkin_list
         ctx["checkin_list_any"] = self.checkin_list == CHECKIN_ANY
         ctx["query"] = self.request.GET.get("query", "")

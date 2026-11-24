@@ -10,10 +10,14 @@
                 <th>{% trans "Attendee" %}
                     {% include "pretix_ordersummary/fragment_sort.html" with key="attendee" %}
                 </th>
-                <th>{% trans "Order date" %}
-                    {% include "pretix_ordersummary/fragment_sort.html" with key="datetime" %}
-                </th>
-                <th>{% trans "Payment method" %}</th>
+                {% if show_datetime %}
+                    <th>{% trans "Order date" %}
+                        {% include "pretix_ordersummary/fragment_sort.html" with key="datetime" %}
+                    </th>
+                {% endif %}
+                {% if show_payment %}
+                    <th>{% trans "Payment method" %}</th>
+                {% endif %}
                 {% for q in questions %}
                     <th>{{ q.question }}
                         {% include "pretix_ordersummary/fragment_sort.html" with key=q.sort_key %}
@@ -57,10 +61,14 @@
                             <span class="text-muted">&ndash;</span>
                         {% endif %}
                     </td>
-                    <td>{{ o.datetime|date:"SHORT_DATETIME_FORMAT" }}</td>
-                    <td>
-                        {% for m in o.payment_methods %}{{ m }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}
-                    </td>
+                    {% if show_datetime %}
+                        <td>{{ o.datetime|date:"SHORT_DATETIME_FORMAT" }}</td>
+                    {% endif %}
+                    {% if show_payment %}
+                        <td>
+                            {% for m in o.payment_methods %}{{ m }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}
+                        </td>
+                    {% endif %}
                     {% for values in o.question_values %}
                         <td>{% for v in values %}{{ v }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}</td>
                     {% endfor %}

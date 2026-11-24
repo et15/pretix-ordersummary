@@ -8,6 +8,7 @@
         <fieldset>
             <legend>{% trans "Orders by attendee" %}</legend>
             {% bootstrap_form_errors form type="non_fields" %}
+            {% bootstrap_field form.ordersummary_standard_columns layout="horizontal" %}
             {% if form.fields.ordersummary_question_columns.choices %}
                 {% bootstrap_field form.ordersummary_question_columns layout="horizontal" %}
             {% else %}
