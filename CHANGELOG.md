@@ -1,3 +1,9 @@
+## v0.1.2 (2026-11-24)
+
+### Fix
+
+- widen search box so its placeholder is not cut off
+
 ## v0.1.1 (2026-11-24)
 
 ### Feat
