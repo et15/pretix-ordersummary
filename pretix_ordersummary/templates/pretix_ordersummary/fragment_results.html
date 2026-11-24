@@ -19,6 +19,12 @@
                         {% include "pretix_ordersummary/fragment_sort.html" with key=q.sort_key %}
                     </th>
                 {% endfor %}
+                {% if checkin_list %}
+                    <th>{% trans "Check-in" %}
+                        {% include "pretix_ordersummary/fragment_sort.html" with key="checkin" %}
+                        {% if not checkin_list_any %}<br><small class="text-muted">{{ checkin_list.name }}</small>{% endif %}
+                    </th>
+                {% endif %}
                 <th class="text-right flip">{% trans "Status" %}
                     {% include "pretix_ordersummary/fragment_sort.html" with key="status" %}
                 </th>
@@ -58,6 +64,26 @@
                     {% for values in o.question_values %}
                         <td>{% for v in values %}{{ v }}{% if not forloop.last %}<br>{% endif %}{% empty %}<span class="text-muted">&ndash;</span>{% endfor %}</td>
                     {% endfor %}
+                    {% if checkin_list %}
+                        <td>
+                            {% if o.checkins_total == 0 %}
+                                <span class="text-muted">&ndash;</span>
+                            {% elif o.checkins_total == 1 %}
+                                {% if o.checkins_entered %}
+                                    <span class="fa fa-check text-success" aria-hidden="true" data-toggle="tooltip" title="{% trans "Checked in" %}"></span>
+                                    <span class="sr-only">{% trans "Checked in" %}</span>
+                                {% else %}
+                                    <span class="text-muted" aria-hidden="true" data-toggle="tooltip" title="{% trans "Not checked in" %}">&ndash;</span>
+                                    <span class="sr-only">{% trans "Not checked in" %}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="{% if o.checkins_entered %}text-success{% else %}text-muted{% endif %}" data-toggle="tooltip" title="{% trans "Checked in" %}">
+                                    {% if o.checkins_entered %}<span class="fa fa-check" aria-hidden="true"></span>{% endif %}
+                                    {{ o.checkins_entered }} / {{ o.checkins_total }}
+                                </span>
+                            {% endif %}
+                        </td>
+                    {% endif %}
                     <td class="text-right flip">{% include "pretixcontrol/orders/fragment_order_status.html" with order=o %}</td>
                 </tr>
             {% endfor %}

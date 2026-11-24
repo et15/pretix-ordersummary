@@ -1,6 +1,7 @@
 """Order list for the event backend that shows attendee names per order."""
 
 from django.db.models import (
+    Count,
     Exists,
     F,
     OuterRef,
@@ -17,6 +18,7 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import ListView
 from pretix.base.models import (
+    Checkin,
     Order,
     OrderPayment,
     OrderPosition,
@@ -27,7 +29,7 @@ from pretix.control.views import PaginationMixin
 from pretix.control.views.event import EventSettingsFormView, EventSettingsViewMixin
 
 from .forms import OrderListSettingsForm
-from .settings import QUESTION_COLUMNS_KEY
+from .settings import CHECKIN_ANY, CHECKIN_COLUMN_KEY, QUESTION_COLUMNS_KEY
 
 PLUGIN_MODULE = "pretix_ordersummary"
 PERMISSION = "event.orders:read"
@@ -136,6 +138,62 @@ def selected_questions(event):
     return list(event.questions.filter(pk__in=ids).order_by("position", "pk"))
 
 
+def selected_checkin_list(event):
+    """Return the check-in column setting: ``None`` (column hidden), ``CHECKIN_ANY``
+    or a ``CheckinList`` of the event.
+
+    A check-in list deleted after it was selected hides the column.
+    """
+    value = event.settings.get(CHECKIN_COLUMN_KEY, as_type=str) or ""
+    if value == CHECKIN_ANY:
+        return CHECKIN_ANY
+    if value.isdigit():
+        return event.checkin_lists.filter(pk=value).first()
+    return None
+
+
+def entries(checkin_list, position_ref="pk"):
+    """Successful entry scans of a position, on ``checkin_list`` or any list.
+
+    ``position_ref`` names the position in the outer query. Exits are ignored:
+    the column shows whether an attendee has *ever* entered.
+    """
+    qs = Checkin.objects.filter(
+        position=OuterRef(position_ref), type=Checkin.TYPE_ENTRY
+    )
+    if checkin_list != CHECKIN_ANY:
+        qs = qs.filter(list=checkin_list)
+    return qs
+
+
+def checkin_counts(order):
+    """Return ``(entered, total)`` for the check-in column of an order.
+
+    Expects ``order.main_positions`` with an ``entered`` annotation. Counts main
+    positions only (no add-ons); canceled positions only if all are canceled.
+    """
+    active = [p for p in order.main_positions if not p.canceled]
+    positions = active or order.main_positions
+    return sum(1 for p in positions if p.entered), len(positions)
+
+
+def checkin_sort_expression(checkin_list):
+    """Database expression: number of attendees counted as entered (see above)."""
+    order_has_active_main = Exists(
+        OrderPosition.objects.filter(order=OuterRef("order"), addon_to__isnull=True)
+    )
+    entered = (
+        OrderPosition.all.filter(order=OuterRef("pk"), addon_to__isnull=True)
+        .filter(Q(canceled=False) | ~order_has_active_main)
+        .filter(Exists(entries(checkin_list)))
+        .order_by()
+        .values("order")
+        .annotate(c=Count("pk"))
+        .values("c")
+    )
+    return Coalesce(Subquery(entered), Value(0))
+
+
 #: Status filter: value -> label. The empty value is the default.
 STATUS_ALL = "all"
 STATUS_CHOICES = (
@@ -239,6 +297,7 @@ class OrderListView(
 
     #: Sort keys of the fixed columns; question columns use ``q<question id>``.
     SORT_FIELDS = ("code", "attendee", "datetime", "status")
+    CHECKIN_SORT_KEY = "checkin"
     DEFAULT_ORDERING = "-datetime"
 
     def get_template_names(self):
@@ -255,11 +314,17 @@ class OrderListView(
         return questions
 
     @cached_property
+    def checkin_list(self):
+        return selected_checkin_list(self.request.event)
+
+    @cached_property
     def ordering(self):
         """The requested sort key (with optional "-"), or the default."""
         value = self.request.GET.get("ordering", "")
         key = value.removeprefix("-")
         allowed = set(self.SORT_FIELDS) | {q.sort_key for q in self.questions}
+        if self.checkin_list:
+            allowed.add(self.CHECKIN_SORT_KEY)
         return value if key in allowed else self.DEFAULT_ORDERING
 
     def _apply_ordering(self, qs):
@@ -267,6 +332,9 @@ class OrderListView(
         key = self.ordering.removeprefix("-")
         if key == "attendee":
             qs = qs.annotate(_sort=Lower(attendee_sort_expression()))
+            expr = "_sort"
+        elif key == self.CHECKIN_SORT_KEY:
+            qs = qs.annotate(_sort=checkin_sort_expression(self.checkin_list))
             expr = "_sort"
         elif key.startswith("q"):
             question = next(q for q in self.questions if q.sort_key == key)
@@ -310,11 +378,16 @@ class OrderListView(
         answer_qs = QuestionAnswer.objects.filter(
             question__in=questions
         ).select_related("question")
+        positions_qs = OrderPosition.all.order_by("positionid")
+        if self.checkin_list:
+            positions_qs = positions_qs.annotate(
+                entered=Exists(entries(self.checkin_list))
+            )
         prefetch_related_objects(
             orders,
             Prefetch(
                 "all_positions",
-                queryset=OrderPosition.all.order_by("positionid"),
+                queryset=positions_qs,
                 to_attr="position_list",
             ),
             Prefetch(
@@ -339,8 +412,12 @@ class OrderListView(
             o.attendee_names, o.name_source = attendee_names(o)
             o.payment_methods = payment_provider_names(o, providers)
             o.question_values = question_values(o, questions)
+            if self.checkin_list:
+                o.checkins_entered, o.checkins_total = checkin_counts(o)
         ctx["orders"] = orders
         ctx["questions"] = questions
+        ctx["checkin_list"] = self.checkin_list
+        ctx["checkin_list_any"] = self.checkin_list == CHECKIN_ANY
         ctx["query"] = self.request.GET.get("query", "")
         ctx["status"] = self.request.GET.get("status", "")
         ctx["status_choices"] = STATUS_CHOICES

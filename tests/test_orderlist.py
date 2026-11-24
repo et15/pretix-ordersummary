@@ -5,6 +5,7 @@ import pytest
 from django.utils.timezone import now
 from django_scopes import scopes_disabled
 from pretix.base.models import (
+    Checkin,
     Customer,
     InvoiceAddress,
     Order,
@@ -316,3 +317,76 @@ def test_live_filter_returns_only_results(admin_client, event, item):
     assert "LIVE1" not in html
     # Sort links keep the current filter.
     assert "status=c" in html
+
+
+def _entry(position, checkin_list, **kwargs):
+    return Checkin.all.create(position=position, list=checkin_list, **kwargs)
+
+
+@pytest.mark.django_db
+def test_checkin_column(admin_settings_client, event, item, addon_item):
+    client = admin_settings_client
+    with scopes_disabled():
+        day1 = event.checkin_lists.create(name="Day 1")
+        day2 = event.checkin_lists.create(name="Day 2")
+        # One attendee, entered on day 2 only.
+        p = _position(_order(event, "ONE01"), item, "Anna")
+        _entry(p, day2)
+        # Two attendees: one entered (and left again), one only failed scans.
+        o = _order(event, "TWO02")
+        a = _position(o, item, "Bert")
+        b = _position(o, item, "Carl")
+        _entry(a, day1)
+        _entry(a, day1, type=Checkin.TYPE_EXIT)
+        _entry(b, day1, successful=False, error_reason="invalid")
+        # Add-ons do not count, also not their check-ins.
+        addon = _position(o, addon_item, "", addon_to=a)
+        _entry(addon, day1)
+        # Nobody entered.
+        _position(_order(event, "NONE3"), item, "Dora")
+
+    resp = client.get(URL)
+    assert resp.context["checkin_list"] is None
+    assert "ordering=-checkin" not in resp.content.decode()
+
+    settings_html = client.get(URL + "settings/").content.decode()
+    assert "Day 1" in settings_html and "Day 2" in settings_html
+
+    def counts(value):
+        resp = client.post(URL + "settings/", {"ordersummary_checkin_column": value})
+        assert resp.status_code == 302
+        resp = client.get(URL)
+        return {
+            o.code: (o.checkins_entered, o.checkins_total)
+            for o in resp.context["orders"]
+        }
+
+    assert counts("any") == {"ONE01": (1, 1), "TWO02": (1, 2), "NONE3": (0, 1)}
+    assert counts(str(day1.pk)) == {"ONE01": (0, 1), "TWO02": (1, 2), "NONE3": (0, 1)}
+    html = client.get(URL).content.decode()
+    assert "Day 1" in html  # name of the selected list in the header
+    assert "ordering=-checkin" in html  # sortable column is shown
+
+    # Sorting: by number of attendees counted as entered.
+    counts("any")
+    resp = client.get(URL, {"ordering": "checkin"})
+    assert [o.code for o in resp.context["orders"]] == ["NONE3", "ONE01", "TWO02"]
+    resp = client.get(URL, {"ordering": "-checkin"})
+    assert [o.code for o in resp.context["orders"]][2] == "NONE3"
+
+
+@pytest.mark.django_db
+def test_checkin_column_deleted_list_hides_column(admin_settings_client, event, item):
+    with scopes_disabled():
+        _position(_order(event, "ORD01"), item, "Anna")
+        event.settings.ordersummary_checkin_column = "999999"
+    resp = admin_settings_client.get(URL, {"ordering": "checkin"})
+    assert resp.context["checkin_list"] is None
+    assert not hasattr(resp.context["orders"][0], "checkins_total")
+
+
+@pytest.mark.django_db
+def test_settings_page_without_questions(admin_settings_client):
+    html = admin_settings_client.get(URL + "settings/").content.decode()
+    assert "This event has no questions yet." in html
+    assert "ordersummary_checkin_column" in html

@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-24 02:49+0000\n"
+"POT-Creation-Date: 2026-11-24 03:19+0000\n"
 "PO-Revision-Date: \n"
 "Last-Translator: et15 <37038563+et15@users.noreply.github.com>\n"
 "Language-Team: \n"
@@ -21,8 +21,8 @@ msgid ""
 "Order list showing the attendees of each order, with payment method and "
 "selected question answers"
 msgstr ""
-"Bestellliste mit den Teilnehmenden jeder Bestellung, der Zahlungsmethode und "
-"ausgewählten Antworten auf Fragen"
+"Bestellliste mit den Teilnehmenden jeder Bestellung, der Zahlungsmethode und"
+" ausgewählten Antworten auf Fragen"
 
 #: pretix_ordersummary/apps.py
 msgid "Orders"
@@ -43,8 +43,28 @@ msgid ""
 "The answers to these questions are shown as additional columns in the "
 "attendee order list, in the order of the questions."
 msgstr ""
-"Die Antworten auf diese Fragen werden in der Bestellliste nach Teilnehmenden "
-"als zusätzliche Spalten angezeigt, in der Reihenfolge der Fragen."
+"Die Antworten auf diese Fragen werden in der Bestellliste nach Teilnehmenden"
+" als zusätzliche Spalten angezeigt, in der Reihenfolge der Fragen."
+
+#: pretix_ordersummary/forms.py
+msgid "Check-in status"
+msgstr ""
+
+#: pretix_ordersummary/forms.py
+msgid ""
+"Shows whether the attendees have entered at least once. Exits, failed scans "
+"and add-on products are not taken into account."
+msgstr ""
+"Zeigt, ob die Teilnehmenden mindestens einmal eingelassen wurden. Ausgänge, "
+"fehlgeschlagene Scans und Zusatzprodukte werden nicht berücksichtigt."
+
+#: pretix_ordersummary/forms.py
+msgid "Do not show column"
+msgstr "Spalte nicht anzeigen"
+
+#: pretix_ordersummary/forms.py
+msgid "All check-in lists"
+msgstr ""
 
 #: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
 msgid "Order code"
@@ -63,6 +83,10 @@ msgid "Payment method"
 msgstr ""
 
 #: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Check-in"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
 msgid "Status"
 msgstr ""
 
@@ -77,6 +101,14 @@ msgstr "Name aus dem Kundenkonto"
 #: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
 msgid "Name from invoice address"
 msgstr "Name aus der Rechnungsadresse"
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Checked in"
+msgstr ""
+
+#: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
+msgid "Not checked in"
+msgstr ""
 
 #: pretix_ordersummary/templates/pretix_ordersummary/fragment_results.html
 msgid "No orders found."

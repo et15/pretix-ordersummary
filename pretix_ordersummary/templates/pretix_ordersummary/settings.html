@@ -7,11 +7,13 @@
         {% csrf_token %}
         <fieldset>
             <legend>{% trans "Orders by attendee" %}</legend>
+            {% bootstrap_form_errors form type="non_fields" %}
             {% if form.fields.ordersummary_question_columns.choices %}
-                {% bootstrap_form form layout="horizontal" %}
+                {% bootstrap_field form.ordersummary_question_columns layout="horizontal" %}
             {% else %}
                 <p class="text-muted">{% trans "This event has no questions yet." %}</p>
             {% endif %}
+            {% bootstrap_field form.ordersummary_checkin_column layout="horizontal" %}
         </fieldset>
         <div class="form-group submit-group">
             <button type="submit" class="btn btn-primary btn-save">

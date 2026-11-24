@@ -22,6 +22,10 @@ Columns
 - **Extra question columns**, chosen under *Settings → Orders by attendee*.
   Each cell shows the answers of all tickets of the order (add-ons included),
   without duplicates. Questions asked once per order are supported, too.
+- **Check-in** (optional, same settings page, for one check-in list or all
+  lists): whether the attendees have ever entered. Exits, failed scans and
+  add-on products are not taken into account. With one attendee the cell shows
+  a check mark, with several attendees "entered / total", e.g. "1 / 2".
 - **Status**, as in pretix' order list.
 
 Canceled tickets are only used if all tickets of an order are canceled. The
@@ -40,7 +44,8 @@ JavaScript, everything works as normal links and forms.
 All columns except the payment method can be sorted with the arrows next to the
 column header. Attendee and question columns sort by the first value shown,
 ignoring case; orders without a value come last. Answers are sorted as text,
-so numbers sort like "10" before "9".
+so numbers sort like "10" before "9". The check-in column sorts by the number
+of attendees who have entered.
 
 Permissions: viewing the list needs the permission to view orders; the settings
 page needs the permission to change the general event settings.
